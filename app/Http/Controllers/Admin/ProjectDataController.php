@@ -4,18 +4,33 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProjectDetail;
+use Illuminate\Http\Request;
 
 class ProjectDataController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
 
-        $projects = ProjectDetail::whereRaw('LOWER(state) IN ("johor", "pulau pinang", "selangor", "wp kuala lumpur")')
-            ->latest()
-            ->paginate(8);
+        $query = ProjectDetail::query();
 
-        return view('admin.project-data.index', compact('projects'));
+        // Filter by state (case-insensitive)
+        if ($request->filled('state')) {
+            $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
+        }
+
+        // Search by project_name or developer_name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('project_name', 'like', "%{$search}%")
+                ->orWhere('developer_name', 'like', "%{$search}%");
+            });
+        }
+
+        $projects = $query->latest()->paginate(10);
+
+        return view('admin.project-data.index', compact('projects', 'states'));
     }
 
     public function show(ProjectDetail $project)
