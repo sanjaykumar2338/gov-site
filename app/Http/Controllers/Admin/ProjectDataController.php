@@ -28,7 +28,7 @@ class ProjectDataController extends Controller
             });
         }
 
-        $projects = $query->latest()->paginate(10);
+        $projects = $query->latest()->paginate(8);
 
         return view('admin.project-data.index', compact('projects', 'states'));
     }
