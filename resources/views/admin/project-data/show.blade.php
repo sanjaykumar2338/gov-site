@@ -43,47 +43,51 @@
 
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Summaries</h2>
-            <table class="table w-full">
-                <thead>
-                    <tr class="bg-base-200 text-left">
-                        <th>House Type</th>
-                        <th>Floors</th>
-                        <th>Rooms</th>
-                        <th>Toilets</th>
-                        <th>Built-up Area</th>
-                        <th>Unit Count</th>
-                        <th>Min Price</th>
-                        <th>Max Price</th>
-                        <th>Actual %</th>
-                        <th>Component Status</th>
-                        <th>CCC Date</th>
-                        <th>VP Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($project->unitSummaries as $unit)
-                        <tr>
-                            <td>{{ $unit->house_type }}</td>
-                            <td>{{ $unit->floors }}</td>
-                            <td>{{ $unit->rooms }}</td>
-                            <td>{{ $unit->toilets }}</td>
-                            <td>{{ $unit->built_up_area }}</td>
-                            <td>{{ $unit->unit_count }}</td>
-                            <td>{{ $unit->min_price }}</td>
-                            <td>{{ $unit->max_price }}</td>
-                            <td>{{ $unit->actual_percentage }}</td>
-                            <td>{{ $unit->component_status }}</td>
-                            <td>{{ $unit->ccc_date }}</td>
-                            <td>{{ $unit->vp_date }}</td>
+            
+            <div class="overflow-x-auto">
+                <table class="table w-full min-w-[1000px]">
+                    <thead>
+                        <tr class="bg-base-200 text-left">
+                            <th>House Type</th>
+                            <th>Floors</th>
+                            <th>Rooms</th>
+                            <th>Toilets</th>
+                            <th>Built-up Area</th>
+                            <th>Unit Count</th>
+                            <th>Min Price</th>
+                            <th>Max Price</th>
+                            <th>Actual %</th>
+                            <th>Component Status</th>
+                            <th>CCC Date</th>
+                            <th>VP Date</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="12" class="text-center py-4">No unit summary data found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($project->unitSummaries as $unit)
+                            <tr>
+                                <td>{{ $unit->house_type }}</td>
+                                <td>{{ $unit->floors }}</td>
+                                <td>{{ $unit->rooms }}</td>
+                                <td>{{ $unit->toilets }}</td>
+                                <td>{{ $unit->built_up_area }}</td>
+                                <td>{{ $unit->unit_count }}</td>
+                                <td>{{ $unit->min_price }}</td>
+                                <td>{{ $unit->max_price }}</td>
+                                <td>{{ $unit->actual_percentage }}</td>
+                                <td>{{ $unit->component_status }}</td>
+                                <td>{{ $unit->ccc_date }}</td>
+                                <td>{{ $unit->vp_date }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="12" class="text-center py-4">No unit summary data found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+
 
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Box Details</h2>
