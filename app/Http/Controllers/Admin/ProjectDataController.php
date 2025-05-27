@@ -12,10 +12,10 @@ class ProjectDataController extends Controller
     {
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
 
-        $query = ProjectDetail::query();
+        $query = ProjectDetail::whereIn(\DB::raw('LOWER(state)'), $states);
 
-        // Filter by state (case-insensitive)
-        if ($request->filled('state') || 1) {
+        // Filter by a specific state from the 4
+        if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
 
