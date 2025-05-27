@@ -54,6 +54,10 @@
                         <th>Unit Count</th>
                         <th>Min Price</th>
                         <th>Max Price</th>
+                        <th>Actual %</th>
+                        <th>Component Status</th>
+                        <th>CCC Date</th>
+                        <th>VP Date</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,10 +71,14 @@
                             <td>{{ $unit->unit_count }}</td>
                             <td>{{ $unit->min_price }}</td>
                             <td>{{ $unit->max_price }}</td>
+                            <td>{{ $unit->actual_percentage }}</td>
+                            <td>{{ $unit->component_status }}</td>
+                            <td>{{ $unit->ccc_date }}</td>
+                            <td>{{ $unit->vp_date }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">No unit summary data found.</td>
+                            <td colspan="12" class="text-center py-4">No unit summary data found.</td>
                         </tr>
                     @endforelse
                 </tbody>
