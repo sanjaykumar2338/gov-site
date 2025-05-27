@@ -34,9 +34,12 @@
 
         <div class="bg-white p-6 rounded shadow">
             <h2 class="text-lg font-semibold mb-4">Other Details</h2>
+            
             <p><strong>Agreement Type:</strong> {{ $project->agreement_type }}</p>
             <p><strong>First VP Date:</strong> {{ $project->first_vp_date }}</p>
             <p><strong>New Construction Period:</strong> {{ $project->new_construction_period }}</p>
+            <p><strong>Extension Approved:</strong> {{ $project->extension_approved }}</p>
+            <p><strong>New VP Date:</strong> {{ $project->new_vp_date }}</p>
             <p><strong>Development Info:</strong> {{ $project->development_info }}</p>
             <p><strong>Overall Status:</strong> {{ $project->overall_status }}</p>
         </div>
