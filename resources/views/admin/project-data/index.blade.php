@@ -21,7 +21,7 @@
                     </option>
                 @endforeach
             </select>
-
+ &nbsp;
             <button type="submit" class="btn btn-primary">Filter</button>
         </form>
 
