@@ -33,6 +33,15 @@ class ProjectDataController extends Controller
         return view('admin.project-data.index', compact('projects', 'states'));
     }
 
+    public function count()
+    {
+        $count = \App\Models\ProjectDetail::count();
+
+        return response()->json([
+            'total_projects' => $count
+        ]);
+    }
+
     public function show(ProjectDetail $project)
     {
         $project->load(['unitSummaries', 'unitBoxes']);

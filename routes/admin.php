@@ -41,6 +41,7 @@ Route::group([
     Route::post('change-password', 'UserController@changePasswordStore')->name('account.password.store');
     Route::get('project-data', 'ProjectDataController@index')->name('view.project.data');
     Route::get('project-data/{project}', 'ProjectDataController@show')->name('view.project.data.show');
+    Route::get('project-data-count', 'ProjectDataController@count')->name('project.data.count');
 
     Route::resource('activitylog', 'ActivityLogController')->except([
         'create',
