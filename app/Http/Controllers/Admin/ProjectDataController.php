@@ -15,7 +15,7 @@ class ProjectDataController extends Controller
         $query = ProjectDetail::query();
 
         // Filter by state (case-insensitive)
-        if ($request->filled('state')) {
+        if ($request->filled('state') || 1) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
 
