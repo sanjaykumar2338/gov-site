@@ -42,6 +42,8 @@ Route::group([
     Route::get('project-data', 'ProjectDataController@index')->name('view.project.data');
     Route::get('project-data/{project}', 'ProjectDataController@show')->name('view.project.data.show');
     Route::get('project-data-count', 'ProjectDataController@count')->name('project.data.count');
+    Route::post('save-column-order', 'ProjectDataController@saveColumnOrder')
+    ->name('save.column.order');
 
     Route::resource('activitylog', 'ActivityLogController')->except([
         'create',
