@@ -8,6 +8,7 @@ from datetime import datetime
 import time
 import json
 import traceback
+import tempfile
 
 # Initialize to None to prevent NameError in finally block
 conn = None
@@ -28,10 +29,14 @@ try:
     )
     cursor = conn.cursor()
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    
+    temp_profile_dir = tempfile.mkdtemp()
+    
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
+    options.add_argument(f"--user-data-dir={temp_profile_dir}")
+
     driver = webdriver.Chrome(options=options)
 
     def get_total_pages():
