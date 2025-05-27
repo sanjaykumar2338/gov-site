@@ -13,7 +13,7 @@ class ProjectDataController extends Controller
 
         $projects = ProjectDetail::whereRaw('LOWER(state) IN ("johor", "pulau pinang", "selangor", "wp kuala lumpur")')
             ->latest()
-            ->paginate(10);
+            ->paginate(8);
 
         return view('admin.project-data.index', compact('projects'));
     }
