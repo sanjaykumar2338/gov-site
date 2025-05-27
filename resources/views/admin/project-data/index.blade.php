@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-2 px-4">
-        <form method="GET" action="{{ route('admin.view.project.data') }}" class="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+        <form method="GET" action="{{ route('admin.view.project.data') }}" class="flex flex-wrap items-center gap-3 mb-4">
             <input 
                 type="text" 
                 name="search" 
@@ -13,10 +13,7 @@
                 class="input input-bordered w-full sm:w-64" 
             />
 
-            <select 
-                name="state" 
-                class="select select-bordered w-full sm:w-48"
-            >
+            <select name="state" class="select select-bordered w-full sm:w-48">
                 <option value="">All States</option>
                 @foreach($states as $state)
                     <option value="{{ $state }}" {{ strtolower(request('state')) == strtolower($state) ? 'selected' : '' }}>
@@ -25,9 +22,8 @@
                 @endforeach
             </select>
 
-            <button type="submit" class="btn btn-primary sm:h-[42px]">Filter</button>
+            <button type="submit" class="btn btn-primary">Filter</button>
         </form>
-
 
         <div class="w-full overflow-x-auto border border-base-200 shadow rounded-lg">
             <table class="table w-full table-zebra text-sm">
