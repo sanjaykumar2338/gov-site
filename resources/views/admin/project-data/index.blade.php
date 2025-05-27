@@ -12,8 +12,8 @@
                 placeholder="Search project or developer..." 
                 class="input input-bordered w-full sm:w-64" 
             />
-
-            <select name="state" class="select select-bordered w-full sm:w-48">
+            &nbsp;
+            <select name="state" class="input input-bordered w-full sm:w-64">
                 <option value="">All States</option>
                 @foreach($states as $state)
                     <option value="{{ $state }}" {{ strtolower(request('state')) == strtolower($state) ? 'selected' : '' }}>
