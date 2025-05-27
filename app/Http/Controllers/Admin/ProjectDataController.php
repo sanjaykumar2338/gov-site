@@ -9,7 +9,7 @@ class ProjectDataController extends Controller
 {
     public function index()
     {
-        $projects = ProjectDetail::latest()->paginate(15);
+        $projects = ProjectDetail::latest()->paginate(10);
         return view('admin.project-data.index', compact('projects'));
     }
 
