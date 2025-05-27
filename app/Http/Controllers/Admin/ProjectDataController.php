@@ -18,4 +18,5 @@ class ProjectDataController extends Controller
         $project->load(['unitSummaries', 'unitBoxes']);
         return view('admin.project-data.show', compact('project'));
     }
+    
 }
