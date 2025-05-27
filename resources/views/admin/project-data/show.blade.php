@@ -77,18 +77,6 @@
             </table>
         </div>
 
-        @php
-            // Preprocess summary price ranges with unique colors
-            $priceGroups = collect($project->unitSummaries)->map(function ($summary, $index) {
-                return [
-                    'house_type' => $summary->house_type,
-                    'min' => (float) str_replace(',', '', $summary->min_price),
-                    'max' => (float) str_replace(',', '', $summary->max_price),
-                    'color' => ['bg-yellow-100', 'bg-green-100', 'bg-blue-100', 'bg-red-100', 'bg-purple-100'][$index % 5], // rotate colors
-                ];
-            });
-        @endphp
-
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Box Details</h2>
             <table class="table w-full">
@@ -105,16 +93,8 @@
                 <tbody>
                     @forelse ($project->unitBoxes as $box)
                         @php
-                            // Clean the price
-                            $price = (float) str_replace(['RM', ',', ' '], '', $box->harga_jualan);
-                            $colorClass = '';
-
-                            foreach ($priceGroups as $group) {
-                                if ($price >= $group['min'] && $price <= $group['max']) {
-                                    $colorClass = $group['color'];
-                                    break;
-                                }
-                            }
+                            $status = strtolower(trim($box->status_jualan));
+                            $colorClass = $status === 'belum dijual' ? 'bg-green-100' : '';
                         @endphp
                         <tr class="{{ $colorClass }}">
                             <td>{{ $box->no_unit }}</td>
