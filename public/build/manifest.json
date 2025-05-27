@@ -1,0 +1,40 @@
+{
+  "_index-xsH4HHeE.js": {
+    "file": "assets/index-xsH4HHeE.js",
+    "name": "index"
+  },
+  "resources/css/admin/app.scss": {
+    "file": "assets/app-BB73u-z5.css",
+    "src": "resources/css/admin/app.scss",
+    "isEntry": true
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CdymGocE.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/admin/app.js": {
+    "file": "assets/app-DkFLhKR-.js",
+    "name": "app",
+    "src": "resources/js/admin/app.js",
+    "isEntry": true,
+    "imports": [
+      "_index-xsH4HHeE.js"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-B-SxKkU-.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_index-xsH4HHeE.js"
+    ]
+  },
+  "resources/js/form-builder/field.js": {
+    "file": "assets/field-COGsCbgv.js",
+    "name": "field",
+    "src": "resources/js/form-builder/field.js",
+    "isEntry": true
+  }
+}
