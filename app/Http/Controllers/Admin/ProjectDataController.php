@@ -15,10 +15,10 @@ class ProjectDataController extends Controller
     {
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
 
-        // ✅ Get all columns from the actual `project_details` table
+        // All column names from table
         $allColumns = Schema::getColumnListing('project_details');
 
-        // ✅ Get saved visible columns in order
+        // Visible columns
         $columnOrder = DB::table('column_orders')
             ->where('table_name', 'project_details')
             ->where('is_visible', 1)
@@ -26,13 +26,20 @@ class ProjectDataController extends Controller
             ->pluck('column_key')
             ->toArray();
 
-        // ✅ If no saved config exists, default to all columns
         if (empty($columnOrder)) {
             $columnOrder = $allColumns;
         }
 
-        $query = ProjectDetail::whereIn(DB::raw('LOWER(state)'), $states);
+        // ✅ Main query: Select only latest unique project per project_code
+        $sub = ProjectDetail::select(DB::raw('MAX(id) as id'))
+            ->whereIn(DB::raw('LOWER(state)'), $states)
+            ->groupBy('project_code');
 
+        $query = ProjectDetail::with(['unitSummaries', 'unitBoxes'])
+            ->whereIn('id', $sub)
+            ->latest();
+
+        // Optional: Filter
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
@@ -45,11 +52,11 @@ class ProjectDataController extends Controller
             });
         }
 
-        $projects = $query->latest()->paginate(10);
+        $projects = $query->paginate(10);
 
         return view('admin.project-data.index', compact('projects', 'states', 'columnOrder', 'allColumns'));
     }
-    
+
     public function count()
     {
         $count = \App\Models\ProjectDetail::count();
