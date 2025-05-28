@@ -15,10 +15,8 @@ class ProjectDataController extends Controller
     {
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
 
-        // All column names from table
         $allColumns = Schema::getColumnListing('project_details');
 
-        // Visible columns
         $columnOrder = DB::table('column_orders')
             ->where('table_name', 'project_details')
             ->where('is_visible', 1)
@@ -30,7 +28,6 @@ class ProjectDataController extends Controller
             $columnOrder = $allColumns;
         }
 
-        // ✅ Main query: Select only latest unique project per project_code
         $sub = ProjectDetail::select(DB::raw('MAX(id) as id'))
             ->whereIn(DB::raw('LOWER(state)'), $states)
             ->groupBy('project_code');
@@ -38,7 +35,6 @@ class ProjectDataController extends Controller
         $query = ProjectDetail::with(['unitSummaries', 'unitBoxes'])
             ->whereIn('id', $sub);
 
-        // Optional: Filter
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
@@ -47,18 +43,38 @@ class ProjectDataController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('project_name', 'like', "%{$search}%")
-                ->orWhere('developer_name', 'like', "%{$search}%");
+                  ->orWhere('developer_name', 'like', "%{$search}%")
+                  ->orWhere('project_code', 'like', "%{$search}%");
             });
         }
 
-        // ✅ Sorting logic
+        if ($request->filled('district')) {
+            $query->where('district', $request->district);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('overall_status', $request->status);
+        }
+
+        if ($request->filled('min_price')) {
+            $query->whereHas('unitSummaries', function ($q) use ($request) {
+                $q->where('min_price', '>=', $request->min_price);
+            });
+        }
+
+        if ($request->filled('max_price')) {
+            $query->whereHas('unitSummaries', function ($q) use ($request) {
+                $q->where('max_price', '<=', $request->max_price);
+            });
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
         if (in_array($sortBy, $allColumns) && in_array(strtolower($sortOrder), ['asc', 'desc'])) {
             $query->orderBy($sortBy, $sortOrder);
         } else {
-            $query->latest(); // Default fallback
+            $query->latest();
         }
 
         $projects = $query->paginate(10)->appends($request->query());

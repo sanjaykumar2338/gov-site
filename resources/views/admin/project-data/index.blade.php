@@ -4,14 +4,13 @@
     </x-slot>
 
     <div class="py-2 px-4">
-        <form method="GET" action="{{ route('admin.view.project.data') }}" class="flex flex-wrap items-center gap-3 mb-4">
-            <input 
-                type="text" 
-                name="search" 
-                value="{{ request('search') }}" 
-                placeholder="Search project or developer..." 
-                class="input input-bordered w-full sm:w-64" 
-            />
+        <button type="button" class="btn btn-sm btn-secondary mb-4" onclick="toggleFilterForm()">
+            Toggle Filters
+        </button>
+
+        <form id="filterForm" method="GET" action="{{ route('admin.view.project.data') }}" class="flex flex-wrap items-center gap-3 mb-4">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search project or developer..." class="input input-bordered w-full sm:w-64" />
+
             <select name="state" class="input input-bordered w-full sm:w-64">
                 <option value="">All States</option>
                 @foreach($states as $state)
@@ -20,6 +19,18 @@
                     </option>
                 @endforeach
             </select>
+
+            <input type="text" name="district" placeholder="District" value="{{ request('district') }}" class="input input-bordered w-full sm:w-64">
+            
+            <select name="project_status" class="input input-bordered w-full sm:w-64">
+                <option value="">Project Status</option>
+                <option value="Active" {{ request('project_status') == 'Active' ? 'selected' : '' }}>Active</option>
+                <option value="Completed" {{ request('project_status') == 'Completed' ? 'selected' : '' }}>Completed</option>
+            </select>
+
+            <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min Price (RM)" class="input input-bordered w-full sm:w-64">
+            <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max Price (RM)" class="input input-bordered w-full sm:w-64">
+
             <button type="submit" class="btn btn-primary">Filter</button>
             <button type="button" class="btn btn-secondary" onclick="openColumnOrderModal()">Reorder Columns</button>
         </form>
@@ -149,7 +160,9 @@
             });
         }
 
-
+        function toggleFilterForm() {
+            const form = document.getElementById('filterForm');
+            form.classList.toggle('hidden');
+        }
     </script>
-
 </x-admin.wrapper>

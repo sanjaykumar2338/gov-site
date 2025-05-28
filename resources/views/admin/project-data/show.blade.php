@@ -32,16 +32,36 @@
             <p><strong>Business Address:</strong> {{ $project->business_address }}</p>
         </div>
 
+        @php
+            // Check if First VP Date is valid
+            $firstVPDate = null;
+            if (!empty($project->first_vp_date) && strtotime($project->first_vp_date)) {
+                $firstVPDate = \Carbon\Carbon::parse($project->first_vp_date);
+            }
+
+            // Extract number of months from "22 Bulan"
+            preg_match('/\d+/', $project->extension_approved ?? '', $matches);
+            $extensionMonths = isset($matches[0]) ? (int) $matches[0] : 0;
+
+            // Calculate new VP date
+            $calculatedNewVPDate = $firstVPDate
+                ? $firstVPDate->copy()->addMonths($extensionMonths)->format('d M Y')
+                : 'N/A';
+        @endphp
+
+
         <div class="bg-white p-6 rounded shadow overflow-x-auto">
             <h2 class="text-lg font-semibold mb-4">Other Details</h2>
             <p><strong>Agreement Type:</strong> {{ $project->agreement_type }}</p>
             <p><strong>Original Construction Period:</strong> {{ $project->original_construction_period }}</p>
             <p><strong>First SPA Date:</strong> {{ $project->first_pjb_date }}</p>
-            <p><strong>First Plan VP Date:</strong> {{ $project->first_vp_date }}</p>
+            <p><strong>First Plan VP Date:</strong> 
+                {{ $firstVPDate ? $firstVPDate->format('d M Y') : 'N/A' }}
+            </p>
             <p><strong>VP Amendment:</strong> {{ $project->vp_amendment }}</p>
             <p><strong>Extension Approved:</strong> {{ $project->extension_approved }}</p>
             <p><strong>New Construction Period:</strong> {{ $project->new_construction_period }}</p>
-            <p><strong>New Plan VP Date:</strong> {{ $project->new_vp_date }}</p>
+            <p><strong>New Plan Vp Date:</strong> {{ $calculatedNewVPDate }}</p>
         </div>
 
 
