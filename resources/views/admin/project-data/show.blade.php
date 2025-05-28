@@ -36,12 +36,12 @@
             <h2 class="text-lg font-semibold mb-4">Other Details</h2>
             <p><strong>Agreement Type:</strong> {{ $project->agreement_type }}</p>
             <p><strong>Original Construction Period:</strong> {{ $project->original_construction_period }}</p>
-            <p><strong>First PJB Date:</strong> {{ $project->first_pjb_date }}</p>
-            <p><strong>First VP Date:</strong> {{ $project->first_vp_date }}</p>
+            <p><strong>First SPA Date:</strong> {{ $project->first_pjb_date }}</p>
+            <p><strong>First Plan VP Date:</strong> {{ $project->first_vp_date }}</p>
             <p><strong>VP Amendment:</strong> {{ $project->vp_amendment }}</p>
             <p><strong>Extension Approved:</strong> {{ $project->extension_approved }}</p>
             <p><strong>New Construction Period:</strong> {{ $project->new_construction_period }}</p>
-            <p><strong>New VP Date:</strong> {{ $project->new_vp_date }}</p>
+            <p><strong>New Plan VP Date:</strong> {{ $project->new_vp_date }}</p>
         </div>
 
 
@@ -95,19 +95,52 @@
 
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Box Details</h2>
+            <form method="GET" class="flex flex-wrap gap-4 items-center mb-4">
+                <input type="text" name="no_unit" placeholder="No Unit/PT/Lot/Plot" class="input input-bordered" value="{{ request('no_unit') }}">
+
+                <select name="kuota_bumi" class="input input-bordered">
+                    <option value="">Sila Pilih</option>
+                    @foreach ($kuotaBumiOptions as $value)
+                        <option value="{{ $value }}" {{ request('kuota_bumi') == $value ? 'selected' : '' }}>{{ $value }}</option>
+                    @endforeach
+                </select>
+
+                <select name="status_jualan" class="input input-bordered">
+                    <option value="">Sila Pilih</option>
+                    @foreach ($statusJualanOptions as $value)
+                        <option value="{{ $value }}" {{ request('status_jualan') == $value ? 'selected' : '' }}>{{ $value }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" class="btn btn-primary">Cari</button>
+            </form>
+
+            <div class="mb-4">
+                <span class="badge">Jumlah Unit: {{ $totalUnits }}</span>
+                <span class="badge bg-green-200">Belum Dijual: {{ $unsoldUnits }}</span>
+                <span class="badge bg-yellow-200">Telah Dijual: {{ $soldUnits }}</span>
+            </div>
+
             <table class="table w-full">
                 <thead>
-                    <tr class="bg-base-200 text-left">
+                    <tr>
                         <th>No. Unit</th>
                         <th>Lot / Plot</th>
                         <th>Kuota Bumi</th>
                         <th>Harga Jualan</th>
                         <th>Harga SPJB</th>
-                        <th>Status Jualan</th>
+                        <th>
+                <a href="{{ request()->fullUrlWithQuery(['sort_box_by' => 'status_jualan', 'sort_box_order' => (request('sort_box_by') == 'status_jualan' && request('sort_box_order') == 'asc') ? 'desc' : 'asc']) }}">
+                    Status Jualan
+                    @if(request('sort_box_by') == 'status_jualan')
+                        {!! request('sort_box_order') == 'asc' ? '&uarr;' : '&darr;' !!}
+                    @endif
+                </a>
+            </th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($project->unitBoxes as $box)
+                    @forelse ($filteredBoxes as $box)
                         @php
                             $status = strtolower(trim($box->status_jualan));
                             $colorClass = $status === 'belum dijual' ? 'bg-green-100' : '';
@@ -121,12 +154,11 @@
                             <td>{{ $box->status_jualan }}</td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="6">No unit box data found.</td>
-                        </tr>
+                        <tr><td colspan="6">No filtered unit box data found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
+
         </div>
 
         <a href="{{ route('admin.view.project.data') }}" class="text-blue-500 underline">← Back to list</a>

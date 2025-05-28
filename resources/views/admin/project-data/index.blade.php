@@ -28,9 +28,24 @@
             <table class="table w-full table-zebra text-sm">
                 <thead>
                     <tr class="bg-base-200 text-left">
+                        @php
+                            $customColumnLabels = [
+                                'new_vp_date' => 'New First VP Date',
+                                // Add more custom labels here if needed
+                            ];
+                        @endphp
+
                         @foreach($columnOrder as $column)
-                            <th>{{ ucwords(str_replace('_', ' ', $column)) }}</th>
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => $column, 'sort_order' => (request('sort_by') == $column && request('sort_order') == 'asc') ? 'desc' : 'asc']) }}">
+                                    {{ $customColumnLabels[$column] ?? ucwords(str_replace('_', ' ', $column)) }}
+                                    @if(request('sort_by') == $column)
+                                        {!! request('sort_order') == 'asc' ? '&uarr;' : '&darr;' !!}
+                                    @endif
+                                </a>
+                            </th>
                         @endforeach
+
                         <th>Action</th>
                     </tr>
                 </thead>

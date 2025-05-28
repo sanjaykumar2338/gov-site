@@ -36,8 +36,7 @@ class ProjectDataController extends Controller
             ->groupBy('project_code');
 
         $query = ProjectDetail::with(['unitSummaries', 'unitBoxes'])
-            ->whereIn('id', $sub)
-            ->latest();
+            ->whereIn('id', $sub);
 
         // Optional: Filter
         if ($request->filled('state')) {
@@ -52,7 +51,17 @@ class ProjectDataController extends Controller
             });
         }
 
-        $projects = $query->paginate(10);
+        // ✅ Sorting logic
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        if (in_array($sortBy, $allColumns) && in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest(); // Default fallback
+        }
+
+        $projects = $query->paginate(10)->appends($request->query());
 
         return view('admin.project-data.index', compact('projects', 'states', 'columnOrder', 'allColumns'));
     }
@@ -66,37 +75,86 @@ class ProjectDataController extends Controller
         ]);
     }
 
-    public function show(ProjectDetail $project)
+    public function show(ProjectDetail $project, Request $request)
     {
         $project->load(['unitSummaries', 'unitBoxes']);
-        return view('admin.project-data.show', compact('project'));
+
+        $unitBoxes = $project->unitBoxes;
+
+        // Get distinct values dynamically
+        $kuotaBumiOptions = $unitBoxes->pluck('kuota_bumi')->unique()->filter()->values();
+        $statusJualanOptions = $unitBoxes->pluck('status_jualan')->unique()->filter()->values();
+
+        // Filtering
+        $filteredBoxes = $unitBoxes;
+
+        if ($request->filled('no_unit')) {
+            $filteredBoxes = $filteredBoxes->filter(fn($box) =>
+                str_contains(strtolower($box->no_unit), strtolower($request->no_unit))
+            );
+        }
+
+        if ($request->filled('kuota_bumi')) {
+            $filteredBoxes = $filteredBoxes->filter(fn($box) =>
+                strtolower($box->kuota_bumi) === strtolower($request->kuota_bumi)
+            );
+        }
+
+        if ($request->filled('status_jualan')) {
+            $filteredBoxes = $filteredBoxes->filter(fn($box) =>
+                strtolower($box->status_jualan) === strtolower($request->status_jualan)
+            );
+        }
+
+        // ✅ Sorting (default: no sorting)
+        if ($request->filled('sort_box_by')) {
+            $sortBy = $request->input('sort_box_by');
+            $sortOrder = strtolower($request->input('sort_box_order', 'asc'));
+
+            $filteredBoxes = $filteredBoxes->sortBy(function ($box) use ($sortBy) {
+                return strtolower(data_get($box, $sortBy));
+            });
+
+            if ($sortOrder === 'desc') {
+                $filteredBoxes = $filteredBoxes->reverse();
+            }
+            // Reindex to avoid Blade foreach issues
+            $filteredBoxes = $filteredBoxes->values();
+        }
+
+        $totalUnits = $unitBoxes->count();
+        $soldUnits = $unitBoxes->where('status_jualan', 'Telah Dijual')->count();
+        $unsoldUnits = $unitBoxes->where('status_jualan', 'Belum Dijual')->count();
+
+        return view('admin.project-data.show', compact(
+            'project', 'filteredBoxes', 'totalUnits', 'soldUnits', 'unsoldUnits',
+            'kuotaBumiOptions', 'statusJualanOptions'
+        ));
     }
 
     public function saveColumnOrder(Request $request)
-{
-    $request->validate([
-        'table_name' => 'required|string',
-        'columns' => 'required|array',
-    ]);
-
-    $tableName = $request->table_name;
-    $columns = $request->columns;
-
-    DB::table('column_orders')->where('table_name', $tableName)->delete();
-
-    foreach ($columns as $col) {
-        DB::table('column_orders')->insert([
-            'table_name' => $tableName,
-            'column_key' => $col['column_key'],
-            'order_index' => $col['order_index'],
-            'is_visible' => $col['is_visible'],
-            'created_at' => now(),
-            'updated_at' => now(),
+    {
+        $request->validate([
+            'table_name' => 'required|string',
+            'columns' => 'required|array',
         ]);
+
+        $tableName = $request->table_name;
+        $columns = $request->columns;
+
+        DB::table('column_orders')->where('table_name', $tableName)->delete();
+
+        foreach ($columns as $col) {
+            DB::table('column_orders')->insert([
+                'table_name' => $tableName,
+                'column_key' => $col['column_key'],
+                'order_index' => $col['order_index'],
+                'is_visible' => $col['is_visible'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Column order saved successfully.']);
     }
-
-    return response()->json(['status' => 'success', 'message' => 'Column order saved successfully.']);
-}
-
-
 }
