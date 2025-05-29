@@ -197,7 +197,7 @@
                     </select>
                 </div>
 
-                <div class="flex items-end h-full">
+                <div class="flex items-end h-full" style="padding-top: 27px;">
                     <button type="submit" class="btn btn-primary">Cari</button>
                 </div>
             </form>
