@@ -64,6 +64,62 @@
             <p><strong>New Plan Vp Date:</strong> {{ $calculatedNewVPDate }}</p>
         </div>
 
+        @php
+            $actualValues = $project->unitSummaries->pluck('actual_percentage')->filter()->map(function($value) {
+                return floatval(preg_replace('/[^0-9.]/', '', $value));
+            });
+
+            $averageActual = $actualValues->count() > 0
+                ? number_format($actualValues->avg(), 2) . '%'
+                : 'N/A';
+
+            // Min and Max Price Calculation
+            $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(function ($value) {
+                return floatval(preg_replace('/[^0-9.]/', '', $value));
+            });
+
+            $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(function ($value) {
+                return floatval(preg_replace('/[^0-9.]/', '', $value));
+            });
+
+            $minPriceFormatted = $minPrices->isNotEmpty() ? 'RM' . number_format($minPrices->min(), 0) : 'N/A';
+            $maxPriceFormatted = $maxPrices->isNotEmpty() ? 'RM' . number_format($maxPrices->max(), 0) : 'N/A';
+        @endphp
+
+        @php
+            $cccDates = $project->unitSummaries->pluck('ccc_date')->filter(function ($date) {
+                return strtotime($date) !== false;
+            })->map(function ($date) {
+                return \Carbon\Carbon::parse($date)->timestamp;
+            });
+
+            $vpDates = $project->unitSummaries->pluck('vp_date')->filter(function ($date) {
+                return strtotime($date) !== false;
+            })->map(function ($date) {
+                return \Carbon\Carbon::parse($date)->timestamp;
+            });
+
+            $finalCccDate = $cccDates->count()
+                ? \Carbon\Carbon::createFromTimestamp(round($cccDates->avg()))->format('d-m-Y')
+                : 'N/A';
+
+            $finalVpDate = $vpDates->count()
+                ? \Carbon\Carbon::createFromTimestamp(round($vpDates->avg()))->format('d-m-Y')
+                : 'N/A';
+        @endphp
+
+        <div class="bg-white p-6 rounded shadow">
+            <h2 class="text-lg font-semibold mb-4">Project Status</h2>
+            <div class="space-y-2">
+                <p><strong>Maklumat Pembangunan:</strong> {{ $project->development_info ?? '-' }}</p>
+                <p><strong>Status Keseluruhan:</strong> {{ $project->overall_status ?? '-' }}</p>
+                <p><strong>Actual %:</strong> {{ $averageActual }}</p>
+                <p><strong>Minimum Price:</strong> {{ $minPriceFormatted }}</p>
+                <p><strong>Maximum Price:</strong> {{ $maxPriceFormatted }}</p>
+                <p><strong>Final CCC Date:</strong> {{ $finalCccDate }}</p>
+                <p><strong>Final VP Date:</strong> {{ $finalVpDate }}</p>
+            </div>
+        </div>
 
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Summaries</h2>
@@ -115,24 +171,35 @@
 
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Box Details</h2>
-            <form method="GET" class="flex flex-wrap gap-4 items-center mb-4">
-                <input type="text" name="no_unit" placeholder="No Unit/PT/Lot/Plot" class="input input-bordered" value="{{ request('no_unit') }}">
+           <form method="GET" class="flex flex-wrap gap-4 items-center mb-4">
+                <div class="flex flex-col">
+                    <label class="font-semibold mb-1">No Unit/PT/Lot/Plot</label>
+                    <input type="text" name="no_unit" placeholder="No Unit" class="input input-bordered" value="{{ request('no_unit') }}">
+                </div>
 
-                <select name="kuota_bumi" class="input input-bordered">
-                    <option value="">Sila Pilih</option>
-                    @foreach ($kuotaBumiOptions as $value)
-                        <option value="{{ $value }}" {{ request('kuota_bumi') == $value ? 'selected' : '' }}>{{ $value }}</option>
-                    @endforeach
-                </select>
+                <div class="flex flex-col">
+                    <label class="font-semibold mb-1">Kuota Bumi</label>
+                    <select name="kuota_bumi" class="input input-bordered">
+                        <option disabled {{ request('kuota_bumi') == '' ? 'selected' : '' }}>Sila Pilih</option>
+                        @foreach ($kuotaBumiOptions as $value)
+                            <option value="{{ $value }}" {{ request('kuota_bumi') == $value ? 'selected' : '' }}>{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                <select name="status_jualan" class="input input-bordered">
-                    <option value="">Sila Pilih</option>
-                    @foreach ($statusJualanOptions as $value)
-                        <option value="{{ $value }}" {{ request('status_jualan') == $value ? 'selected' : '' }}>{{ $value }}</option>
-                    @endforeach
-                </select>
+                <div class="flex flex-col">
+                    <label class="font-semibold mb-1">Status Jualan</label>
+                    <select name="status_jualan" class="input input-bordered">
+                        <option disabled {{ request('status_jualan') == '' ? 'selected' : '' }}>Sila Pilih</option>
+                        @foreach ($statusJualanOptions as $value)
+                            <option value="{{ $value }}" {{ request('status_jualan') == $value ? 'selected' : '' }}>{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                <button type="submit" class="btn btn-primary">Cari</button>
+                <div class="flex items-end h-full">
+                    <button type="submit" class="btn btn-primary">Cari</button>
+                </div>
             </form>
 
             <div class="mb-4">
@@ -144,19 +211,30 @@
             <table class="table w-full">
                 <thead>
                     <tr>
-                        <th>No. Unit</th>
-                        <th>Lot / Plot</th>
-                        <th>Kuota Bumi</th>
-                        <th>Harga Jualan</th>
-                        <th>Harga SPJB</th>
-                        <th>
-                <a href="{{ request()->fullUrlWithQuery(['sort_box_by' => 'status_jualan', 'sort_box_order' => (request('sort_box_by') == 'status_jualan' && request('sort_box_order') == 'asc') ? 'desc' : 'asc']) }}">
-                    Status Jualan
-                    @if(request('sort_box_by') == 'status_jualan')
-                        {!! request('sort_box_order') == 'asc' ? '&uarr;' : '&darr;' !!}
-                    @endif
-                </a>
-            </th>
+                        @php
+                            $sortableColumns = [
+                                'no_unit' => 'No. Unit',
+                                'no_pt_lot_plot' => 'Lot / Plot',
+                                'kuota_bumi' => 'Kuota Bumi',
+                                'harga_jualan' => 'Harga Jualan',
+                                'harga_spjb' => 'Harga SPJB',
+                                'status_jualan' => 'Status Jualan'
+                            ];
+                        @endphp
+
+                        @foreach ($sortableColumns as $key => $label)
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery([
+                                    'sort_box_by' => $key,
+                                    'sort_box_order' => (request('sort_box_by') == $key && request('sort_box_order') == 'asc') ? 'desc' : 'asc'
+                                ]) }}">
+                                    {{ $label }}
+                                    @if(request('sort_box_by') == $key)
+                                        {!! request('sort_box_order') == 'asc' ? '&uarr;' : '&darr;' !!}
+                                    @endif
+                                </a>
+                            </th>
+                        @endforeach
                     </tr>
                 </thead>
                 <tbody>

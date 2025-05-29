@@ -52,8 +52,8 @@ class ProjectDataController extends Controller
             $query->where('district', $request->district);
         }
 
-        if ($request->filled('status')) {
-            $query->where('overall_status', $request->status);
+        if ($request->filled('project_status')) {
+            $query->where('overall_status', $request->project_status);
         }
 
         if ($request->filled('min_price')) {
@@ -66,6 +66,34 @@ class ProjectDataController extends Controller
             $query->whereHas('unitSummaries', function ($q) use ($request) {
                 $q->where('max_price', '<=', $request->max_price);
             });
+        }
+
+        if ($request->filled('vp_date_range')) {
+            $range = explode(' - ', $request->vp_date_range);
+
+            if (count($range) === 2) {
+                $startDate = \Carbon\Carbon::parse($range[0])->format('Y-m-d');
+                $endDate = \Carbon\Carbon::parse($range[1])->format('Y-m-d');
+
+                // Apply Malay month translation and date comparison
+                $query->whereRaw("
+                    STR_TO_DATE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        new_vp_date,
+                        'Mac','03'),
+                        'Jan','01'),
+                        'Feb','02'),
+                        'Apr','04'),
+                        'Mei','05'),
+                        'Jun','06'),
+                        'Jul','07'),
+                        'Ogos','08'),
+                        'Sep','09'),
+                        'Okt','10'),
+                        'Nov','11'),
+                        'Dis','12'), '%d %m %Y')
+                    BETWEEN ? AND ?
+                ", [$startDate, $endDate]);
+            }
         }
 
         $sortBy = $request->input('sort_by', 'created_at');
@@ -134,9 +162,10 @@ class ProjectDataController extends Controller
             if ($sortOrder === 'desc') {
                 $filteredBoxes = $filteredBoxes->reverse();
             }
-            // Reindex to avoid Blade foreach issues
-            $filteredBoxes = $filteredBoxes->values();
+
+            $filteredBoxes = $filteredBoxes->values(); // reindex
         }
+
 
         $totalUnits = $unitBoxes->count();
         $soldUnits = $unitBoxes->where('status_jualan', 'Telah Dijual')->count();

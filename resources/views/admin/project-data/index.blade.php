@@ -2,7 +2,7 @@
     <x-slot name="title">
         {{ __('Project Data') }}
     </x-slot>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <div class="py-2 px-4">
         <button type="button" class="btn btn-sm btn-secondary mb-4" onclick="toggleFilterForm()">
             Toggle Filters
@@ -20,20 +20,44 @@
                 @endforeach
             </select>
 
-            <input type="text" name="district" placeholder="District" value="{{ request('district') }}" class="input input-bordered w-full sm:w-64">
-            
+            <select name="district" id="district" class="input input-bordered w-full sm:w-64">
+                <option value="">Select District</option>
+            </select>
+
+            @php
+                $statusOptions = [
+                    'Belum Mula',
+                    'Lancar',
+                    'Lewat',
+                    'Sakit',
+                    'Siap Dengan CCC',
+                    'Siap Dengan CFO',
+                    'Permit Telah Dibatalkan',
+                ];
+            @endphp
+
             <select name="project_status" class="input input-bordered w-full sm:w-64">
-                <option value="">Project Status</option>
-                <option value="Active" {{ request('project_status') == 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Completed" {{ request('project_status') == 'Completed' ? 'selected' : '' }}>Completed</option>
+                <option value="">Selling Status</option>
+                @foreach($statusOptions as $status)
+                    <option value="{{ $status }}" {{ request('project_status') == $status ? 'selected' : '' }}>
+                        {{ $status }}
+                    </option>
+                @endforeach
             </select>
 
             <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min Price (RM)" class="input input-bordered w-full sm:w-64">
             <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max Price (RM)" class="input input-bordered w-full sm:w-64">
 
+            <input type="text" name="vp_date_range" id="vp_date_range" class="input input-bordered w-full sm:w-64"
+                placeholder="New First VP Date Range" value="{{ request('vp_date_range') }}">
+
             <button type="submit" class="btn btn-primary">Filter</button>
+
+            <button type="button" class="btn btn-outline" onclick="clearFilters()">Clear Filters</button>
+
             <button type="button" class="btn btn-secondary" onclick="openColumnOrderModal()">Reorder Columns</button>
         </form>
+
 
         <div class="w-full overflow-x-auto border border-base-200 shadow rounded-lg">
             <table class="table w-full table-zebra text-sm">
@@ -42,6 +66,8 @@
                         @php
                             $customColumnLabels = [
                                 'new_vp_date' => 'New First VP Date',
+                                'first_pjb_date' => 'First SPA Date',
+                                'first_vp_date' => 'First Plan VP Date',
                                 // Add more custom labels here if needed
                             ];
                         @endphp
@@ -114,7 +140,10 @@
     <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow hidden">
         ✅ Column order saved!
     </div>
-
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         function openColumnOrderModal() {
@@ -164,5 +193,83 @@
             const form = document.getElementById('filterForm');
             form.classList.toggle('hidden');
         }
+
+        
+        const districtOptions = {
+            "johor": [
+                "Batu Pahat", "Johor Bahru", "Kluang", "Kota Tinggi", "Kulai", "Mersing", "Muar", "Pontian", "Segamat", "Tangkak"
+            ],
+            "pulau pinang": [
+                "Daerah Barat Daya", "Daerah Timor Laut", "Seberang Perai Selatan", "Seberang Perai Tengah", "Seberang Perai Utara"
+            ],
+            "selangor": [
+                "Gombak", "Hulu Langat", "Hulu Selangor", "Klang", "Kuala Langat", "Kuala Selangor", "Petaling", "Sabak Bernam", "Sepang"
+            ],
+            "wp kuala lumpur": [
+                "Kuala Lumpur"
+            ]
+        };
+
+        const stateSelect = document.querySelector('select[name="state"]');
+        const districtSelect = document.getElementById('district');
+
+        function populateDistricts(selectedState, preselectedDistrict = '') {
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            if (districtOptions[selectedState]) {
+                districtOptions[selectedState].forEach(function (district) {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    if (district.toLowerCase() === preselectedDistrict.toLowerCase()) {
+                        option.selected = true;
+                    }
+                    districtSelect.appendChild(option);
+                });
+            }
+        }
+
+        stateSelect.addEventListener('change', function () {
+            populateDistricts(this.value);
+        });
+
+        // Auto-select on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const preselectedState = "{{ strtolower(request('state')) }}";
+            const preselectedDistrict = "{{ request('district') }}";
+            if (preselectedState) {
+                populateDistricts(preselectedState, preselectedDistrict);
+            }
+        });
+
+        $(function () {
+            $(function() {
+                $('input[name="vp_date_range"]').daterangepicker({
+                    autoUpdateInput: false,
+                    locale: {
+                        format: 'YYYY-MM-DD'
+                    }
+                });
+            });
+
+            $('#vp_date_range').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('#vp_date_range').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+        });
+
+        function clearFilters() {
+            // Clear local input value
+            const dateRangeInput = document.getElementById('vp_date_range');
+            if (dateRangeInput) {
+                dateRangeInput.value = '';
+            }
+
+            // Redirect to the base URL without query strings
+            window.location.href = "{{ route('admin.view.project.data') }}";
+        }
+
     </script>
 </x-admin.wrapper>

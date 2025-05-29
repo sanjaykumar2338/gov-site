@@ -9,10 +9,12 @@
 
         <!-- Fonts -->
         <link rel="stylesheet" href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap">
+        <!-- Add in your <head> section -->
 
         <!-- Scripts -->
         @vite(['resources/css/admin/app.scss', 'resources/js/admin/app.js', 'resources/js/form-builder/field.js'])
     </head>
+    
     <body class="font-sans antialiased">
         <div class="bg-base-100 drawer lg:drawer-open">
             <input id="drawer" type="checkbox" class="drawer-toggle">
@@ -105,4 +107,6 @@
             </div>
         </div>
     </body>
+
+    <!-- Add before closing </body> -->
 </html>
