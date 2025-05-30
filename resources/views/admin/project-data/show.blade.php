@@ -122,7 +122,7 @@
         </div>
 
         @if(!empty($project->map_url) || !empty($project->brochure_link))
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+             <div class="bg-white p-6 rounded shadow mt-6">
 
                 @if(!empty($project->map_url))
                     <div>
