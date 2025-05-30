@@ -71,6 +71,10 @@ class ProjectDataController extends Controller
             $query->where('overall_status', $request->project_status);
         }
 
+        if ($request->filled('agreement_type')) {
+            $query->where('agreement_type', $request->agreement_type);
+        }
+
         if ($request->filled('min_price')) {
             $query->whereHas('unitSummaries', function ($q) use ($request) {
                 $q->where('min_price', '>=', $request->min_price);
