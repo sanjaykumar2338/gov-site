@@ -25,6 +25,9 @@ class ProjectDataController extends Controller
             'new_first_vp_date' => 'New First VP Date',
             'final_ccc_date_virtual' => 'Final CCC Date',
             'final_vp_date_virtual' => 'Final VP Date',
+            'actual_percentage_virtual' => 'Actual %',
+            'min_price_virtual' => 'Minimum Price',
+            'max_price_virtual' => 'Maximum Price',
         ];
 
         $columnOrderData = DB::table('column_orders')
@@ -147,6 +150,15 @@ class ProjectDataController extends Controller
                     'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date ?? null,
                     'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date ?? null,
                     'new_first_vp_date' => $project->new_vp_date ?? null,
+                    'actual_percentage_virtual' => $project->unitSummaries->pluck('actual_percentage')->filter()->map(function($val) {
+                        return floatval(preg_replace('/[^0-9.]/', '', $val));
+                    })->avg(),
+                    'min_price_virtual' => $project->unitSummaries->pluck('min_price')->filter()->map(function($val) {
+                        return floatval(preg_replace('/[^0-9.]/', '', $val));
+                    })->min(),
+                    'max_price_virtual' => $project->unitSummaries->pluck('max_price')->filter()->map(function($val) {
+                        return floatval(preg_replace('/[^0-9.]/', '', $val));
+                    })->max(),
                     default => null
                 };
             }, SORT_REGULAR, strtolower($sortOrder) === 'desc');
