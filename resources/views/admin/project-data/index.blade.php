@@ -67,7 +67,6 @@
             </div>
         </form>
 
-
         <div class="w-full overflow-x-auto border border-base-200 shadow rounded-lg">
             <table class="table w-full table-zebra text-sm">
                 <thead>
@@ -342,7 +341,10 @@
             });
 
             // Redirect to the base URL without query strings
-            window.location.href = "{{ route('admin.view.project.data') }}";
+            setTimeout(function(){
+                document.getElementById('filterForm').submit();
+                //window.location.href = "{{ route('admin.view.project.data') }}";
+            },1000)
         }
 
          function toggleFilterForm() {
