@@ -337,6 +337,10 @@
                 dateRangeInput.value = '';
             }
 
+            document.querySelectorAll('#filterForm input, #filterForm select, #filterForm textarea').forEach(el => {
+                el.value = '';
+            });
+
             // Redirect to the base URL without query strings
             window.location.href = "{{ route('admin.view.project.data') }}";
         }
