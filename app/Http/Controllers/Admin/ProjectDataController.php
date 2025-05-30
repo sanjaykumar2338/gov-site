@@ -17,12 +17,27 @@ class ProjectDataController extends Controller
 
         $allColumns = Schema::getColumnListing('project_details');
 
-        $columnOrder = DB::table('column_orders')
+        $virtualColumns = [
+            'total_units' => 'Total Units',
+            'total_belum_dijual_units' => 'Total Belum Dijual Units',
+            'total_telah_dijual_units' => 'Total Telah Dijual Units',
+            'new_first_vp_date' => 'New First VP Date',
+            'final_ccc_date_virtual' => 'Final CCC Date',
+            'final_vp_date_virtual' => 'Final VP Date',
+        ];
+
+        // Get ordered and visible columns
+        $columnOrderData = DB::table('column_orders')
             ->where('table_name', 'project_details')
-            ->where('is_visible', 1)
             ->orderBy('order_index')
-            ->pluck('column_key')
-            ->toArray();
+            ->get();
+
+        $columnOrder = [];
+        foreach ($columnOrderData as $col) {
+            if ($col->is_visible) {
+                $columnOrder[] = $col->column_key;
+            }
+        }
 
         if (empty($columnOrder)) {
             $columnOrder = $allColumns;
@@ -70,29 +85,48 @@ class ProjectDataController extends Controller
 
         if ($request->filled('vp_date_range')) {
             $range = explode(' - ', $request->vp_date_range);
-
             if (count($range) === 2) {
-                $startDate = \Carbon\Carbon::parse($range[0])->format('Y-m-d');
-                $endDate = \Carbon\Carbon::parse($range[1])->format('Y-m-d');
+                $startDate = Carbon::parse($range[0])->format('Y-m-d');
+                $endDate = Carbon::parse($range[1])->format('Y-m-d');
 
-                // Apply Malay month translation and date comparison
-                $query->whereRaw("
-                    STR_TO_DATE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-                        new_vp_date,
-                        'Mac','03'),
-                        'Jan','01'),
-                        'Feb','02'),
-                        'Apr','04'),
-                        'Mei','05'),
-                        'Jun','06'),
-                        'Jul','07'),
-                        'Ogos','08'),
-                        'Sep','09'),
-                        'Okt','10'),
-                        'Nov','11'),
-                        'Dis','12'), '%d %m %Y')
-                    BETWEEN ? AND ?
-                ", [$startDate, $endDate]);
+                $query->whereRaw("STR_TO_DATE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    new_vp_date,
+                    'Mac','03'),
+                    'Jan','01'),
+                    'Feb','02'),
+                    'Apr','04'),
+                    'Mei','05'),
+                    'Jun','06'),
+                    'Jul','07'),
+                    'Ogos','08'),
+                    'Sep','09'),
+                    'Okt','10'),
+                    'Nov','11'),
+                    'Dis','12'), '%d %m %Y') BETWEEN ? AND ?", [$startDate, $endDate]);
+            }
+        }
+
+        if ($request->filled('final_ccc_date')) {
+            $range = explode(' - ', $request->final_ccc_date);
+            if (count($range) === 2) {
+                $startDate = Carbon::createFromFormat('Y-m-d', trim($range[0]))->format('Y-m-d');
+                $endDate = Carbon::createFromFormat('Y-m-d', trim($range[1]))->format('Y-m-d');
+
+                $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween(DB::raw("STR_TO_DATE(ccc_date, '%d/%m/%Y')"), [$startDate, $endDate]);
+                });
+            }
+        }
+
+        if ($request->filled('final_vp_date')) {
+            $range = explode(' - ', $request->final_vp_date);
+            if (count($range) === 2) {
+                $startDate = Carbon::createFromFormat('Y-m-d', trim($range[0]))->format('Y-m-d');
+                $endDate = Carbon::createFromFormat('Y-m-d', trim($range[1]))->format('Y-m-d');
+
+                $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween(DB::raw("STR_TO_DATE(vp_date, '%d/%m/%Y')"), [$startDate, $endDate]);
+                });
             }
         }
 
@@ -107,7 +141,14 @@ class ProjectDataController extends Controller
 
         $projects = $query->paginate(10)->appends($request->query());
 
-        return view('admin.project-data.index', compact('projects', 'states', 'columnOrder', 'allColumns'));
+        return view('admin.project-data.index', compact(
+            'projects',
+            'states',
+            'columnOrder',
+            'allColumns',
+            'virtualColumns',
+            'columnOrderData'
+        ));
     }
 
     public function count()
