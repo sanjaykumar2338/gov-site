@@ -136,6 +136,7 @@
                 @endif
 
                 @if(!empty($project->map_url))
+                    <br>
                     <div>
                         <h2 class="text-lg font-semibold mb-2">Map Location</h2>
                         <iframe src="{{ $project->map_url }}"
