@@ -337,7 +337,7 @@
                 dateRangeInput.value = '';
             }
 
-            document.querySelectorAll('#filterForm input, #filterForm select, #filterForm textarea').forEach(el => {
+            document.querySelectorAll('#filterForm input, #filterForm select, #filterForm textarea, #filterForm text').forEach(el => {
                 el.value = '';
             });
 
