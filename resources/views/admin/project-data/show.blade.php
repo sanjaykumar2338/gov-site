@@ -124,10 +124,10 @@
         @if(!empty($project->map_url) || !empty($project->brochure_link))
              <div class="bg-white p-6 rounded shadow mt-6">
 
-                @if(!empty($project->map_url))
+                @if(!empty($project->brochure_link))
                     <div>
-                        <h2 class="text-lg font-semibold mb-2">Map Location</h2>
-                        <iframe src="{{ $project->map_url }}"
+                        <h2 class="text-lg font-semibold mb-2">Brochure</h2>
+                        <iframe src="{{ $project->brochure_link }}"
                                 class="w-full h-72 rounded border"
                                 frameborder="0"
                                 allowfullscreen>
@@ -135,10 +135,10 @@
                     </div>
                 @endif
 
-                @if(!empty($project->brochure_link))
+                @if(!empty($project->map_url))
                     <div>
-                        <h2 class="text-lg font-semibold mb-2">Brochure</h2>
-                        <iframe src="{{ $project->brochure_link }}"
+                        <h2 class="text-lg font-semibold mb-2">Map Location</h2>
+                        <iframe src="{{ $project->map_url }}"
                                 class="w-full h-72 rounded border"
                                 frameborder="0"
                                 allowfullscreen>
