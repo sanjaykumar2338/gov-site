@@ -331,6 +331,7 @@
 
         function clearFilters() {
             // Clear local input value
+            document.querySelector('.listmenumain')?.click();
             const dateRangeInput = document.getElementById('vp_date_range');
             if (dateRangeInput) {
                 dateRangeInput.value = '';
