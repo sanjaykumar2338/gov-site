@@ -67,81 +67,78 @@
 
         <div class="w-full overflow-x-auto border border-base-200 shadow rounded-lg">
             <table class="table w-full table-zebra text-sm">
-    <thead>
-        <tr class="bg-base-200 text-left">
-            @php
-                $customColumnLabels = array_merge([
-                    'new_vp_date' => 'New First VP Date',
-                    'first_pjb_date' => 'First SPA Date',
-                    'first_vp_date' => 'First Plan VP Date',
-                ], $virtualColumns ?? []);
-            @endphp
+                <thead>
+                    <tr class="bg-base-200 text-left">
+                        @php
+                            $customColumnLabels = array_merge([
+                                'new_vp_date' => 'New First VP Date',
+                                'first_pjb_date' => 'First SPA Date',
+                                'first_vp_date' => 'First Plan VP Date',
+                            ], $virtualColumns ?? []);
+                        @endphp
 
-            @foreach($columnOrder as $column)
-                <th>
-                    <a href="{{ request()->fullUrlWithQuery([
-                        'sort_by' => $column,
-                        'sort_order' => (request('sort_by') == $column && request('sort_order') == 'asc') ? 'desc' : 'asc'
-                    ]) }}">
-                        {{ $customColumnLabels[$column] ?? ucwords(str_replace('_', ' ', $column)) }}
-                        @if(request('sort_by') == $column)
-                            {!! request('sort_order') == 'asc' ? '&uarr;' : '&darr;' !!}
-                        @endif
-                    </a>
-                </th>
-            @endforeach
+                        @foreach($columnOrder as $index => $column)
+                            <th class="{{ $loop->first ? 'sticky left-0 bg-base-200 z-10' : '' }}">
+                                <a href="{{ request()->fullUrlWithQuery([
+                                    'sort_by' => $column,
+                                    'sort_order' => (request('sort_by') == $column && request('sort_order') == 'asc') ? 'desc' : 'asc'
+                                ]) }}">
+                                    {{ $customColumnLabels[$column] ?? ucwords(str_replace('_', ' ', $column)) }}
+                                    @if(request('sort_by') == $column)
+                                        {!! request('sort_order') == 'asc' ? '&uarr;' : '&darr;' !!}
+                                    @endif
+                                </a>
+                            </th>
+                        @endforeach
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($projects as $project)
+                        <tr>
+                            @foreach($columnOrder as $index => $column)
+                                <td class="{{ $loop->first ? 'sticky left-0 bg-white z-0' : '' }}">
+                                    @switch($column)
+                                        @case('total_units')
+                                            {{ $project->unitBoxes->count() }}
+                                            @break
 
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($projects as $project)
-            <tr>
-                @foreach($columnOrder as $column)
-                    <td>
-                        @switch($column)
-                            @case('total_units')
-                                {{ $project->unitBoxes->count() }}
-                                @break
+                                        @case('total_telah_dijual_units')
+                                            {{ $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count() }}
+                                            @break
 
-                            @case('total_telah_dijual_units')
-                                {{ $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count() }}
-                                @break
+                                        @case('total_belum_dijual_units')
+                                            {{ $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count() }}
+                                            @break
 
-                            @case('total_belum_dijual_units')
-                                {{ $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count() }}
-                                @break
+                                        @case('new_first_vp_date')
+                                            {{ $project->new_vp_date ?? '-' }}
+                                            @break
 
-                            @case('new_first_vp_date')
-                                {{ $project->new_vp_date ?? '-' }}
-                                @break
+                                        @case('final_ccc_date_virtual')
+                                            {{ optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date ?? '-' }}
+                                            @break
 
-                            @case('final_ccc_date_virtual')
-                                {{ optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date ?? '-' }}
-                                @break
+                                        @case('final_vp_date_virtual')
+                                            {{ optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date ?? '-' }}
+                                            @break
 
-                            @case('final_vp_date_virtual')
-                                {{ optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date ?? '-' }}
-                                @break
+                                        @default
+                                            {{ $project->{$column} ?? '-' }}
+                                    @endswitch
+                                </td>
+                            @endforeach
+                            <td>
+                                <a href="{{ route('admin.view.project.data.show', $project->id) }}"
+                                class="btn btn-sm btn-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
 
-                            @default
-                                {{ $project->{$column} ?? '-' }}
-                        @endswitch
-                    </td>
-                @endforeach
-
-                <td>
-                    <a href="{{ route('admin.view.project.data.show', $project->id) }}"
-                       class="btn btn-sm btn-primary">
-                        View Details
-                    </a>
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
-
-
+            </table>
         </div>
 
         <div class="py-4">
