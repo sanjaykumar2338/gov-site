@@ -26,7 +26,6 @@ class ProjectDataController extends Controller
             'final_vp_date_virtual' => 'Final VP Date',
         ];
 
-        // Get ordered and visible columns
         $columnOrderData = DB::table('column_orders')
             ->where('table_name', 'project_details')
             ->orderBy('order_index')
@@ -50,6 +49,7 @@ class ProjectDataController extends Controller
         $query = ProjectDetail::with(['unitSummaries', 'unitBoxes'])
             ->whereIn('id', $sub);
 
+        // Filters
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
@@ -58,8 +58,8 @@ class ProjectDataController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('project_name', 'like', "%{$search}%")
-                  ->orWhere('developer_name', 'like', "%{$search}%")
-                  ->orWhere('project_code', 'like', "%{$search}%");
+                ->orWhere('developer_name', 'like', "%{$search}%")
+                ->orWhere('project_code', 'like', "%{$search}%");
             });
         }
 
@@ -92,7 +92,6 @@ class ProjectDataController extends Controller
             if (count($range) === 2) {
                 $startDate = Carbon::parse($range[0])->format('Y-m-d');
                 $endDate = Carbon::parse($range[1])->format('Y-m-d');
-
                 $query->whereRaw("STR_TO_DATE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
                     new_vp_date,
                     'Mac','03'),
@@ -115,7 +114,6 @@ class ProjectDataController extends Controller
             if (count($range) === 2) {
                 $startDate = Carbon::createFromFormat('Y-m-d', trim($range[0]))->format('Y-m-d');
                 $endDate = Carbon::createFromFormat('Y-m-d', trim($range[1]))->format('Y-m-d');
-
                 $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
                     $q->whereBetween(DB::raw("STR_TO_DATE(ccc_date, '%d/%m/%Y')"), [$startDate, $endDate]);
                 });
@@ -127,7 +125,6 @@ class ProjectDataController extends Controller
             if (count($range) === 2) {
                 $startDate = Carbon::createFromFormat('Y-m-d', trim($range[0]))->format('Y-m-d');
                 $endDate = Carbon::createFromFormat('Y-m-d', trim($range[1]))->format('Y-m-d');
-
                 $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
                     $q->whereBetween(DB::raw("STR_TO_DATE(vp_date, '%d/%m/%Y')"), [$startDate, $endDate]);
                 });
@@ -137,13 +134,37 @@ class ProjectDataController extends Controller
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        if (in_array($sortBy, $allColumns) && in_array(strtolower($sortOrder), ['asc', 'desc'])) {
-            $query->orderBy($sortBy, $sortOrder);
+        $projects = $query->get();
+
+        // Virtual Sorting (manually sort after fetching data)
+        if (array_key_exists($sortBy, $virtualColumns)) {
+            $projects = $projects->sortBy(function ($project) use ($sortBy) {
+                return match ($sortBy) {
+                    'total_units' => $project->unitBoxes->count(),
+                    'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
+                    'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
+                    'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date ?? null,
+                    'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date ?? null,
+                    'new_first_vp_date' => $project->new_vp_date ?? null,
+                    default => null
+                };
+            }, SORT_REGULAR, strtolower($sortOrder) === 'desc');
         } else {
-            $query->latest();
+            if (in_array($sortBy, $allColumns) && in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+                $projects = $projects->sortBy(fn ($item) => $item->{$sortBy}, SORT_REGULAR, strtolower($sortOrder) === 'desc');
+            }
         }
 
-        $projects = $query->paginate(10)->appends($request->query());
+        // Paginate manually
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $paginatedProjects = new LengthAwarePaginator(
+            $projects->forPage($currentPage, $perPage),
+            $projects->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         $agreementTypes = DB::table('project_details')
             ->select('agreement_type')
@@ -155,7 +176,7 @@ class ProjectDataController extends Controller
             ->toArray();
 
         return view('admin.project-data.index', compact(
-            'projects',
+            'paginatedProjects',
             'states',
             'columnOrder',
             'allColumns',
