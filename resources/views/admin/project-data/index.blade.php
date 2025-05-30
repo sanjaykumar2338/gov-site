@@ -57,8 +57,15 @@
             <input type="text" name="final_vp_date" id="final_vp_date" class="input input-bordered w-full sm:w-[21rem]"
                 placeholder="Final VP Date" value="{{ request('final_vp_date') }}">
 
-            <input type="text" name="agreement_type" id="agreement_type" class="input input-bordered w-full sm:w-[21rem]"
-                placeholder="Agreement Type" value="{{ request('agreement_type') }}">
+            <select name="agreement_type" id="agreement_type" class="input input-bordered w-full sm:w-[21rem]">
+                <option value="">Agreement Type</option>
+                @foreach($agreementTypes as $type)
+                    <option value="{{ $type }}" {{ request('agreement_type') == $type ? 'selected' : '' }}>
+                        {{ $type }}
+                    </option>
+                @endforeach
+            </select>
+
 
             <div class="flex gap-3 items-center ml-auto mt-2 sm:mt-0">
                 <button type="submit" class="btn btn-primary">Filter</button>

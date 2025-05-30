@@ -145,13 +145,23 @@ class ProjectDataController extends Controller
 
         $projects = $query->paginate(10)->appends($request->query());
 
+        $agreementTypes = DB::table('project_details')
+            ->select('agreement_type')
+            ->whereNotNull('agreement_type')
+            ->where('agreement_type', '!=', '')
+            ->distinct()
+            ->pluck('agreement_type')
+            ->toArray();
+
+
         return view('admin.project-data.index', compact(
             'projects',
             'states',
             'columnOrder',
             'allColumns',
             'virtualColumns',
-            'columnOrderData'
+            'columnOrderData',
+            'agreementTypes'
         ));
     }
 
