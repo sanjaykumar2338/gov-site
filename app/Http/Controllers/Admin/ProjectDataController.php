@@ -157,7 +157,7 @@ class ProjectDataController extends Controller
         }
 
         // Paginate manually
-        $perPage = 10;
+        $perPage = 50;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $paginatedProjects = new LengthAwarePaginator(
             $projects->forPage($currentPage, $perPage),
