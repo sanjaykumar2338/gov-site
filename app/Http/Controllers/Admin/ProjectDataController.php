@@ -149,10 +149,10 @@ class ProjectDataController extends Controller
             ->select('agreement_type')
             ->whereNotNull('agreement_type')
             ->where('agreement_type', '!=', '')
+            ->whereNotIn('agreement_type', ['-', 'N/A', 'null', 'NULL'])
             ->distinct()
             ->pluck('agreement_type')
             ->toArray();
-
 
         return view('admin.project-data.index', compact(
             'projects',
