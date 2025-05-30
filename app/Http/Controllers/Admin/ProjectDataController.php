@@ -176,8 +176,9 @@ class ProjectDataController extends Controller
             ->pluck('agreement_type')
             ->toArray();
 
+        $projects = $paginatedProjects;
         return view('admin.project-data.index', compact(
-            'paginatedProjects',
+            'projects',
             'states',
             'columnOrder',
             'allColumns',
