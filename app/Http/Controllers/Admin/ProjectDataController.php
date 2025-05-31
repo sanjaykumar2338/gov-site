@@ -15,7 +15,6 @@ class ProjectDataController extends Controller
     public function index(Request $request)
     {
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
-
         $allColumns = Schema::getColumnListing('project_details');
 
         $virtualColumns = [
@@ -52,8 +51,7 @@ class ProjectDataController extends Controller
             ->whereIn(DB::raw('LOWER(state)'), $states)
             ->groupBy('project_code');
 
-        $query = DB::table('project_details')
-            ->whereIn('id', $sub->pluck('id'));
+        $query = DB::table('project_details')->whereIn('id', $sub->pluck('id'));
 
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
@@ -102,6 +100,15 @@ class ProjectDataController extends Controller
                 ? $project->original_construction_period 
                 : $project->new_construction_period;
 
+            // Parse date fields for sorting
+            if ($project->permit_valid_from) {
+                $project->permit_valid_from = \Carbon\Carbon::parse($this->normalizeDateString($project->permit_valid_from));
+            }
+            if ($project->permit_valid_to) {
+                $project->permit_valid_to = \Carbon\Carbon::parse($this->normalizeDateString($project->permit_valid_to));
+            }
+
+
             $project->virtual_sort_values = [
                 'total_units' => $project->unitBoxes->count(),
                 'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
@@ -116,9 +123,14 @@ class ProjectDataController extends Controller
             ];
         });
 
+        // Sorting
         if (array_key_exists($sortBy, $virtualColumns)) {
             $projects = $projects->{strtolower($sortOrder) === 'asc' ? 'sortBy' : 'sortByDesc'}(
                 fn($p) => $p->virtual_sort_values[$sortBy] ?? null
+            );
+        } else {
+            $projects = $projects->{strtolower($sortOrder) === 'asc' ? 'sortBy' : 'sortByDesc'}(
+                fn($p) => $p->{$sortBy} ?? null
             );
         }
 
@@ -140,11 +152,22 @@ class ProjectDataController extends Controller
             ->toArray();
 
         $projects = $paginatedProjects;
-        //echo "<pre>"; print_r($projects); die;
 
         return view('admin.project-data.index', compact(
             'projects', 'states', 'columnOrder', 'allColumns', 'virtualColumns', 'columnOrderData', 'agreementTypes'
         ));
+    }
+
+    public function normalizeDateString($dateStr)
+    {
+        $replaceMap = [
+            'Mac' => 'Mar', // Malay to English
+            'Mei' => 'May',
+            'Okt' => 'Oct',
+            'Dis' => 'Dec',
+        ];
+
+        return strtr($dateStr, $replaceMap);
     }
 
     public function count()
