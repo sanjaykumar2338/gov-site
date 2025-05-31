@@ -109,32 +109,51 @@
                                 <td class="{{ $loop->first ? 'sticky left-0 bg-white z-0' : '' }}">
                                     @switch($column)
                                         @case('total_units')
-                                            {{ $project->unitBoxes->count() }}
+                                            {{ $project->virtual_sort_values['total_units'] ?? '-' }}
                                             @break
 
                                         @case('total_telah_dijual_units')
-                                            {{ $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count() }}
+                                            {{ $project->virtual_sort_values['total_telah_dijual_units'] ?? '-' }}
                                             @break
 
                                         @case('total_belum_dijual_units')
-                                            {{ $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count() }}
+                                            {{ $project->virtual_sort_values['total_belum_dijual_units'] ?? '-' }}
                                             @break
 
                                         @case('new_first_vp_date')
-                                            {{ $project->new_vp_date ?? '-' }}
+                                            {{ $project->virtual_sort_values['new_first_vp_date'] ?? '-' }}
                                             @break
 
                                         @case('final_ccc_date_virtual')
-                                            {{ optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date ?? '-' }}
+                                            {{ $project->virtual_sort_values['final_ccc_date_virtual'] ?? '-' }}
                                             @break
 
                                         @case('final_vp_date_virtual')
-                                            {{ optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date ?? '-' }}
+                                            {{ $project->virtual_sort_values['final_vp_date_virtual'] ?? '-' }}
+                                            @break
+
+                                        @case('actual_percentage_virtual')
+                                            {{ isset($project->virtual_sort_values['actual_percentage_virtual']) 
+                                                ? number_format($project->virtual_sort_values['actual_percentage_virtual'], 2) . '%' 
+                                                : '-' }}
+                                            @break
+
+                                        @case('min_price_virtual')
+                                            {{ isset($project->virtual_sort_values['min_price_virtual']) 
+                                                ? 'RM' . number_format($project->virtual_sort_values['min_price_virtual'], 0) 
+                                                : '-' }}
+                                            @break
+
+                                        @case('max_price_virtual')
+                                            {{ isset($project->virtual_sort_values['max_price_virtual']) 
+                                                ? 'RM' . number_format($project->virtual_sort_values['max_price_virtual'], 0) 
+                                                : '-' }}
                                             @break
 
                                         @default
                                             {{ $project->{$column} ?? '-' }}
                                     @endswitch
+
                                 </td>
                             @endforeach
                             <td>
