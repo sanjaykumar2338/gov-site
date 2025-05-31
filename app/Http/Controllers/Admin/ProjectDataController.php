@@ -14,9 +14,7 @@ class ProjectDataController extends Controller
 {
     public function index(Request $request)
     {
-        set_time_limit(300);
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
-
         $allColumns = Schema::getColumnListing('project_details');
 
         $virtualColumns = [
@@ -132,7 +130,8 @@ class ProjectDataController extends Controller
 
         $projects = $query->get();
 
-        // Precompute virtual columns
+        // --- Commented for debugging ---
+        /*
         $projects->each(function ($project) {
             $actuals = $project->unitSummaries->pluck('actual_percentage')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
             $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
@@ -150,6 +149,7 @@ class ProjectDataController extends Controller
                 'max_price_virtual' => $maxPrices->max(),
             ];
         });
+        */
 
         if (array_key_exists($sortBy, $virtualColumns)) {
             $projects = $projects->{strtolower($sortOrder) === 'asc' ? 'sortBy' : 'sortByDesc'}(fn($p) => $p->virtual_sort_values[$sortBy] ?? null);
