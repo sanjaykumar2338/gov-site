@@ -27,7 +27,7 @@
     @endforeach
 
     <li>
-        <a href="{{ route('admin.view.project.data') }}" class="listmenumain {{ request()->routeIs('admin.view.project.data') ? 'active' : '' }}">
+        <a href="{{ route('admin.view.project.data') }}" class="{{ request()->routeIs('admin.view.project.data') ? 'active' : '' }}">
             📊 View Project Data
         </a>
     </li>
