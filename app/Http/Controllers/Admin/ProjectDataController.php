@@ -17,6 +17,7 @@ class ProjectDataController extends Controller
         set_time_limit(300);
 
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
+
         $allColumns = Schema::getColumnListing('project_details');
 
         $virtualColumns = [
@@ -47,14 +48,14 @@ class ProjectDataController extends Controller
             $columnOrder = $allColumns;
         }
 
-        $sub = ProjectDetail::select(DB::raw('MAX(id) as id'))
+        $sub = DB::table('project_details')
+            ->select(DB::raw('MAX(id) as id'))
             ->whereIn(DB::raw('LOWER(state)'), $states)
             ->groupBy('project_code');
 
-        $query = ProjectDetail::with(['unitSummaries', 'unitBoxes'])
-            ->whereIn('id', $sub);
+        $query = DB::table('project_details')
+            ->whereIn('id', $sub->pluck('id'));
 
-        // Filters
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
@@ -75,102 +76,55 @@ class ProjectDataController extends Controller
         if ($request->filled('agreement_type')) {
             $query->where('agreement_type', $request->agreement_type);
         }
-        if ($request->filled('min_price')) {
-            $query->whereHas('unitSummaries', function ($q) use ($request) {
-                $q->where('min_price', '>=', $request->min_price);
-            });
-        }
-        if ($request->filled('max_price')) {
-            $query->whereHas('unitSummaries', function ($q) use ($request) {
-                $q->where('max_price', '<=', $request->max_price);
-            });
-        }
-        if ($request->filled('vp_date_range')) {
-            $range = explode(' - ', $request->vp_date_range);
-            if (count($range) === 2) {
-                $startDate = Carbon::parse($range[0])->format('Y-m-d');
-                $endDate = Carbon::parse($range[1])->format('Y-m-d');
-                $query->whereRaw("STR_TO_DATE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-                    new_vp_date,
-                    'Mac','03'),
-                    'Jan','01'),
-                    'Feb','02'),
-                    'Apr','04'),
-                    'Mei','05'),
-                    'Jun','06'),
-                    'Jul','07'),
-                    'Ogos','08'),
-                    'Sep','09'),
-                    'Okt','10'),
-                    'Nov','11'),
-                    'Dis','12'), '%d %m %Y') BETWEEN ? AND ?", [$startDate, $endDate]);
-            }
-        }
-        if ($request->filled('final_ccc_date')) {
-            $range = explode(' - ', $request->final_ccc_date);
-            if (count($range) === 2) {
-                $startDate = Carbon::parse($range[0])->format('Y-m-d');
-                $endDate = Carbon::parse($range[1])->format('Y-m-d');
-                $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween(DB::raw("STR_TO_DATE(ccc_date, '%d/%m/%Y')"), [$startDate, $endDate]);
-                });
-            }
-        }
-        if ($request->filled('final_vp_date')) {
-            $range = explode(' - ', $request->final_vp_date);
-            if (count($range) === 2) {
-                $startDate = Carbon::parse($range[0])->format('Y-m-d');
-                $endDate = Carbon::parse($range[1])->format('Y-m-d');
-                $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween(DB::raw("STR_TO_DATE(vp_date, '%d/%m/%Y')"), [$startDate, $endDate]);
-                });
-            }
-        }
 
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
-        $isVirtualSort = array_key_exists($sortBy, $virtualColumns);
 
-        if ($isVirtualSort) {
-            $projects = $query->get();
+        $perPage = 8;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-            $projects->each(function ($project) {
-                $actuals = $project->unitSummaries->pluck('actual_percentage')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-                $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-                $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
+        $baseIds = (clone $query)
+            ->select('id')
+            ->paginate($perPage, ['*'], 'page', $currentPage)
+            ->appends($request->query());
 
-                $project->virtual_sort_values = [
-                    'total_units' => $project->unitBoxes->count(),
-                    'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
-                    'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
-                    'new_first_vp_date' => $project->new_vp_date ?? null,
-                    'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date,
-                    'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date,
-                    'actual_percentage_virtual' => $actuals->avg(),
-                    'min_price_virtual' => $minPrices->min(),
-                    'max_price_virtual' => $maxPrices->max(),
-                ];
-            });
+        $projectIds = $baseIds->pluck('id')->toArray();
 
+        $projects = ProjectDetail::with(['unitSummaries', 'unitBoxes'])
+            ->whereIn('id', $projectIds)
+            ->get();
+
+        $projects->each(function ($project) {
+            $actuals = $project->unitSummaries->pluck('actual_percentage')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
+            $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
+            $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
+
+            $project->virtual_sort_values = [
+                'total_units' => $project->unitBoxes->count(),
+                'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
+                'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
+                'new_first_vp_date' => $project->new_vp_date ?? null,
+                'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date,
+                'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date,
+                'actual_percentage_virtual' => $actuals->avg(),
+                'min_price_virtual' => $minPrices->min(),
+                'max_price_virtual' => $maxPrices->max(),
+            ];
+        });
+
+        if (array_key_exists($sortBy, $virtualColumns)) {
             $projects = $projects->{strtolower($sortOrder) === 'asc' ? 'sortBy' : 'sortByDesc'}(
                 fn($p) => $p->virtual_sort_values[$sortBy] ?? null
             );
-
-            $perPage = 8;
-            $currentPage = LengthAwarePaginator::resolveCurrentPage();
-            $paginatedProjects = new LengthAwarePaginator(
-                $projects->forPage($currentPage, $perPage),
-                $projects->count(),
-                $perPage,
-                $currentPage,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-        } else {
-            $paginatedProjects = $query
-                ->orderBy($sortBy, $sortOrder)
-                ->paginate(8)
-                ->appends($request->query());
         }
+
+        $paginatedProjects = new LengthAwarePaginator(
+            $projects->values(),
+            $baseIds->total(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         $agreementTypes = DB::table('project_details')
             ->select('agreement_type')
