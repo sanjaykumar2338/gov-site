@@ -126,7 +126,10 @@ class ProjectDataController extends Controller
             }
         }
 
-     
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        $projects = $query->get();
 
         $perPage = 50;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
