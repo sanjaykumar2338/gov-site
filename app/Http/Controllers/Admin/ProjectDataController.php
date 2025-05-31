@@ -126,39 +126,7 @@ class ProjectDataController extends Controller
             }
         }
 
-        $sortBy = $request->input('sort_by');
-        $sortOrder = $request->input('sort_order', 'desc');
-
-        if ($sortBy && array_key_exists($sortBy, $virtualColumns)) {
-            $projects = $query->get();
-
-            $projects->each(function ($project) {
-                $actuals = $project->unitSummaries->pluck('actual_percentage')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-                $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-                $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-
-                $project->virtual_sort_values = [
-                    'total_units' => $project->unitBoxes->count(),
-                    'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
-                    'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
-                    'new_first_vp_date' => $project->new_vp_date ?? null,
-                    'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date,
-                    'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date,
-                    'actual_percentage_virtual' => $actuals->avg(),
-                    'min_price_virtual' => $minPrices->min(),
-                    'max_price_virtual' => $maxPrices->max(),
-                ];
-            });
-
-            $projects = $projects->{strtolower($sortOrder) === 'asc' ? 'sortBy' : 'sortByDesc'}(fn($p) => $p->virtual_sort_values[$sortBy] ?? null);
-        } else {
-            if ($sortBy && in_array($sortBy, $allColumns)) {
-                $query->orderBy($sortBy, $sortOrder);
-            } else {
-                $query->orderBy('created_at', 'desc');
-            }
-            $projects = $query->get();
-        }
+     
 
         $perPage = 50;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
