@@ -14,6 +14,7 @@ class ProjectDataController extends Controller
 {
     public function index(Request $request)
     {
+        set_time_limit(2000);
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
 
         $allColumns = Schema::getColumnListing('project_details');
