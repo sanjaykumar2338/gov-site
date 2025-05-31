@@ -14,8 +14,6 @@ class ProjectDataController extends Controller
 {
     public function index(Request $request)
     {
-        set_time_limit(300);
-
         $states = ['johor', 'pulau pinang', 'selangor', 'wp kuala lumpur'];
 
         $allColumns = Schema::getColumnListing('project_details');
@@ -30,6 +28,7 @@ class ProjectDataController extends Controller
             'actual_percentage_virtual' => 'Actual %',
             'min_price_virtual' => 'Minimum Price',
             'max_price_virtual' => 'Maximum Price',
+            'final_construction_period' => 'Final Construction Period',
         ];
 
         $columnOrderData = DB::table('column_orders')
@@ -99,6 +98,10 @@ class ProjectDataController extends Controller
             $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
             $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
 
+            $finalConstruction = empty(trim($project->extension_approved)) || $project->extension_approved === '-' 
+                ? $project->original_construction_period 
+                : $project->new_construction_period;
+
             $project->virtual_sort_values = [
                 'total_units' => $project->unitBoxes->count(),
                 'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
@@ -109,6 +112,7 @@ class ProjectDataController extends Controller
                 'actual_percentage_virtual' => $actuals->avg(),
                 'min_price_virtual' => $minPrices->min(),
                 'max_price_virtual' => $maxPrices->max(),
+                'final_construction_period' => $finalConstruction,
             ];
         });
 

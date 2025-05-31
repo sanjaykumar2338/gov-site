@@ -149,6 +149,9 @@
                                                 ? 'RM' . number_format($project->virtual_sort_values['max_price_virtual'], 0) 
                                                 : '-' }}
                                             @break
+                                        @case('final_construction_period')
+                                            {{ $project->virtual_sort_values['final_construction_period'] ?? '-' }}
+                                            @break
 
                                         @default
                                             {{ $project->{$column} ?? '-' }}
