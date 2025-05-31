@@ -95,9 +95,9 @@ class ProjectDataController extends Controller
             ->get();
 
         $projects->each(function ($project) {
-            $actuals = $project->unitSummaries->pluck('actual_percentage')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-            $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
-            $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
+            $actuals = $project->unitSummaries->pluck('actual_percentage')->filter()->avg();
+            $minPrices = $project->unitSummaries->pluck('min_price')->filter()->min();
+            $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->max();
 
             $project->virtual_sort_values = [
                 'total_units' => $project->unitBoxes->count(),
@@ -106,9 +106,9 @@ class ProjectDataController extends Controller
                 'new_first_vp_date' => $project->new_vp_date ?? null,
                 'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date,
                 'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date,
-                'actual_percentage_virtual' => $actuals->avg(),
-                'min_price_virtual' => $minPrices->min(),
-                'max_price_virtual' => $maxPrices->max(),
+                'actual_percentage_virtual' => $actuals,
+                'min_price_virtual' => $minPrices,
+                'max_price_virtual' => $maxPrices,
             ];
         });
 
