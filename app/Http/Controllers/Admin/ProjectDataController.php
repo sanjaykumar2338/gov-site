@@ -158,16 +158,19 @@ class ProjectDataController extends Controller
         ));
     }
 
-    public function normalizeDateString($dateStr)
+    private function normalizeDateString($dateStr)
     {
-        $replaceMap = [
-            'Mac' => 'Mar', // Malay to English
-            'Mei' => 'May',
-            'Okt' => 'Oct',
-            'Dis' => 'Dec',
+        $replacements = [
+            'Jan' => 'January', 'Feb' => 'February', 'Mac' => 'March', 'Apr' => 'April',
+            'Mei' => 'May', 'Jun' => 'June', 'Jul' => 'July', 'Ogs' => 'August',
+            'Sep' => 'September', 'Okt' => 'October', 'Nov' => 'November', 'Dis' => 'December',
         ];
 
-        return strtr($dateStr, $replaceMap);
+        foreach ($replacements as $malay => $english) {
+            $dateStr = preg_replace("/\b$malay\b/i", $english, $dateStr);
+        }
+
+        return $dateStr;
     }
 
     public function count()
