@@ -122,11 +122,14 @@
         </div>
 
         @if(!empty($project->map_url) || !empty($project->brochure_link))
-             <div class="bg-white p-6 rounded shadow mt-6">
+            <div class="bg-white p-6 rounded shadow mt-6">
 
                 @if(!empty($project->brochure_link))
-                    <div>
-                        <h2 class="text-lg font-semibold mb-2">Brochure</h2>
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="text-lg font-semibold">Brochure</h2>
+                            <a href="{{ $project->brochure_link }}" target="_blank" class="text-blue-600 hover:underline text-sm">View in New Tab</a>
+                        </div>
                         <iframe src="{{ $project->brochure_link }}"
                                 class="w-full h-72 rounded border"
                                 frameborder="0"
@@ -136,9 +139,11 @@
                 @endif
 
                 @if(!empty($project->map_url))
-                    <br>
                     <div>
-                        <h2 class="text-lg font-semibold mb-2">Map Location</h2>
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="text-lg font-semibold">Map Location</h2>
+                            <a href="{{ $project->map_url }}" target="_blank" class="text-blue-600 hover:underline text-sm">View in New Tab</a>
+                        </div>
                         <iframe src="{{ $project->map_url }}"
                                 class="w-full h-72 rounded border"
                                 frameborder="0"
@@ -149,6 +154,19 @@
 
             </div>
         @endif
+
+
+        <div class="bg-white p-6 rounded shadow mt-6">
+            <div class="row">
+                <div class="col-6">
+                    <p class="font-bold mb-8"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">E. OVERALL UNIT DISPLAY</font></font></p>
+                    <p class="font-bold text-sm mb-4 single-line-lg"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Click the button below to view the entire approved unit:-</font></font></p>
+                    <a href="{{$project->unit_detail_url}}" target="_blank" class="btn btn-primary" style="width:170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <i class="fas fa-search"></i><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">View Unit Details
+                    </font></font></a>
+                </div>
+            </div>
+        </div>
 
         <div class="bg-white p-6 rounded shadow mt-6">
             <h2 class="text-lg font-semibold mb-4">Unit Summaries</h2>
