@@ -3,6 +3,7 @@
         {{ __('Project Data') }}
     </x-slot>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <div class="py-2 px-4">
         <button type="button" id="toggleBtn" class="btn btn-sm btn-secondary mb-4 ml-auto block" onclick="toggleFilterForm()">
             Toggle Filters
@@ -152,6 +153,30 @@
                                         @case('final_construction_period')
                                             {{ $project->virtual_sort_values['final_construction_period'] ?? '-' }}
                                             @break
+                                        @case('brochure_link')
+                                            <div class="text-center">
+                                                @if(!empty($project->brochure_link))
+                                                    <a href="{{ $project->brochure_link }}" target="_blank" title="View Brochure">
+                                                        <i class="fa fa-file-pdf-o text-red-600" style="font-size:24px;"></i>
+                                                    </a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </div>
+                                            @break
+
+                                        @case('map_url')
+                                            <div class="text-center">
+                                                @if(!empty($project->map_url))
+                                                    <a href="{{ $project->map_url }}" target="_blank" title="View Map">
+                                                        <i class="fa fa-map-marker text-blue-600" style="font-size:24px;"></i>
+                                                    </a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </div>
+                                            @break
+
 
                                         @default
                                             {{ $project->{$column} ?? '-' }}

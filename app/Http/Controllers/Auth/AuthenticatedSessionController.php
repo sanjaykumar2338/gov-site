@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -27,6 +29,23 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        DB::table('activity_log')->insert([
+            'log_name'     => 'auth',
+            'description'  => 'User logged in',
+            'subject_type' => 'App\\Models\\User',
+            'subject_id'   => Auth::id(),
+            'event'        => 'login',
+            'causer_type'  => 'App\\Models\\User',
+            'causer_id'    => Auth::id(),
+            'properties'   => json_encode([
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]),
+            'batch_uuid'   => (string) Str::uuid(),
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
 
         return redirect()->intended(route('admin.dashboard', absolute: false));
     }
