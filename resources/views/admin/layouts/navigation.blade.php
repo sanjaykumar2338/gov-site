@@ -8,24 +8,34 @@
             {{env('APP_NAME')}}
         </a>
     </li>
-    @foreach($menus as $menu)
-    <li>
-        <a href="{{ $menu['link'] }}" class="{{ (request()->is(ltrim($menu['link'], '/'))) ? 'active' : '' }}">
-            @if($menu['icon'])
-            <x-admin.base-icon path="{{$menu['icon']}}" />
-            @endif
-            {{ $menu['name'] }}
-        </a>
-        @isset($menu['children'])
-        <ul class="bg-base-100 p-2">
-            @foreach($menu['children'] as $child)
-            <li><a href="{{ $child['link'] }}" class="{{ (request()->is(ltrim($child['link'], '/'))) ? 'active' : '' }}">{{ $child['name'] }}</a></li>
-            @endforeach
-        </ul>
-        @endisset
-    </li>
-    @endforeach
+        @foreach($menus as $menu)
+        @php
+            $user = auth()->user();
+        @endphp
 
+        @if($user->hasRole('admin') || $user->hasRole('superadmin'))
+            <li>
+                <a href="{{ $menu['link'] }}" class="{{ (request()->is(ltrim($menu['link'], '/'))) ? 'active' : '' }}">
+                    @if(!empty($menu['icon']))
+                        <x-admin.base-icon path="{{ $menu['icon'] }}" />
+                    @endif
+                    {{ $menu['name'] }}
+                </a>
+
+                @isset($menu['children'])
+                    <ul class="bg-base-100 p-2">
+                        @foreach($menu['children'] as $child)
+                            <li>
+                                <a href="{{ $child['link'] }}" class="{{ (request()->is(ltrim($child['link'], '/'))) ? 'active' : '' }}">
+                                    {{ $child['name'] }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endisset
+            </li>
+        @endif
+    @endforeach
     <li>
         <a href="{{ route('admin.view.project.data') }}" class="{{ request()->routeIs('admin.view.project.data') ? 'active' : '' }}">
             📊 View Project Data
