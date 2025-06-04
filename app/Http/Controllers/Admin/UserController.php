@@ -51,7 +51,10 @@ class UserController extends Controller
     public function store(UserCreateData $data, UserCreateAction $userCreateAction)
     {
         $this->authorize('adminCreate', User::class);
-        $userCreateAction->handle($data);
+        $user = $userCreateAction->handle($data);
+
+        $user->email_verified_at = now();
+        $user->save();
 
         return redirect()->route('admin.user.index')
             ->with('message', __('User created successfully.'));
