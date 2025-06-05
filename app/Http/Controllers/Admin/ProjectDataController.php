@@ -77,7 +77,7 @@ class ProjectDataController extends Controller
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $perPage = 25;
+        $perPage = 10;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
         $baseIds = (clone $query)

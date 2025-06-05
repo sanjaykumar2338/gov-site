@@ -81,7 +81,7 @@
                     <tr class="bg-base-200 text-left">
                         @php
                             $customColumnLabels = array_merge([
-                                'new_vp_date' => 'New First VP Date',
+                               // 'new_vp_date' => 'New First VP Date',
                                 'first_pjb_date' => 'First SPA Date',
                                 'first_vp_date' => 'First Plan VP Date',
                             ], $virtualColumns ?? []);
@@ -211,7 +211,7 @@
                 <ul id="sortableColumns" class="space-y-2">
                     @php
                         $customColumnLabels = array_merge([
-                            'new_vp_date' => 'New First VP Date',
+                           // 'new_vp_date' => 'New First VP Date',
                             'first_pjb_date' => 'First SPA Date',
                             'first_vp_date' => 'First Plan VP Date',
                         ], $virtualColumns ?? []);
