@@ -28,6 +28,7 @@ class ProjectDataController extends Controller
             'min_price_virtual' => 'Minimum Price',
             'max_price_virtual' => 'Maximum Price',
             'final_construction_period' => 'Final Construction Period',
+            'new_plan_vp_date' => 'New Plan VP Date',
         ];
 
         $columnOrderData = DB::table('column_orders')
@@ -108,6 +109,16 @@ class ProjectDataController extends Controller
                 $project->permit_valid_to = \Carbon\Carbon::parse($this->normalizeDateString($project->permit_valid_to));
             }
 
+            $firstVPDate = null;
+            if (!empty($project->first_vp_date) && strtotime($project->first_vp_date)) {
+                $firstVPDate = \Carbon\Carbon::parse($project->first_vp_date);
+            }
+
+            preg_match('/\d+/', $project->extension_approved ?? '', $matches);
+            $extensionMonths = isset($matches[0]) ? (int) $matches[0] : 0;
+            $calculatedNewVPDate = $firstVPDate
+                ? $firstVPDate->copy()->addMonths($extensionMonths)->format('Y-m-d')
+                : null;
 
             $project->virtual_sort_values = [
                 'total_units' => $project->unitBoxes->count(),
@@ -120,6 +131,7 @@ class ProjectDataController extends Controller
                 'min_price_virtual' => $minPrices->min(),
                 'max_price_virtual' => $maxPrices->max(),
                 'final_construction_period' => $finalConstruction,
+                'new_plan_vp_date' => $project->first_vp_date,
             ];
         });
 

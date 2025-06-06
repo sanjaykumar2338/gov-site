@@ -84,6 +84,7 @@
                                // 'new_vp_date' => 'New First VP Date',
                                 'first_pjb_date' => 'First SPA Date',
                                 'first_vp_date' => 'First Plan VP Date',
+                                'new_plan_vp_date' => 'New Plan Vp Date'
                             ], $virtualColumns ?? []);
                         @endphp
 
@@ -131,6 +132,10 @@
 
                                         @case('final_vp_date_virtual')
                                             {{ $project->virtual_sort_values['final_vp_date_virtual'] ?? '-' }}
+                                            @break
+
+                                        @case('new_plan_vp_date')
+                                            {{ $project->virtual_sort_values['new_plan_vp_date'] ?? '-' }}
                                             @break
 
                                         @case('actual_percentage_virtual')
@@ -214,6 +219,7 @@
                            // 'new_vp_date' => 'New First VP Date',
                             'first_pjb_date' => 'First SPA Date',
                             'first_vp_date' => 'First Plan VP Date',
+                            'new_plan_vp_date' => 'New Plan Vp Date'
                         ], $virtualColumns ?? []);
                     @endphp
 

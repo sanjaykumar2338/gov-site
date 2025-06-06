@@ -20,10 +20,11 @@
 <body class="font-sans text-gray-900 antialiased">
     <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 dark:bg-gray-900">
        <div>
-            <a href="/">
-                <img src="{{ asset('logo.png') }}" alt="Logo" class="w-40 h-40" />
-            </a>
-        </div>
+    <a href="/">
+        <img src="{{ asset('logo.png') }}" alt="Logo" class="w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80" />
+    </a>
+</div>
+
 
 
         <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
