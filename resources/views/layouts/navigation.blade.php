@@ -3,12 +3,21 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
+                <style>
+                    .w-28 {
+    width: 9rem; /* 144px */
+}
+.h-28 {
+    height: 4rem; /* 64px */
+}
+</style>
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-    <a href="{{ route('dashboard') }}">
-        <img src="{{ asset('logo.png') }}" alt="Logo" class="block h-9 w-auto" />
+               <div>
+    <a href="/">
+        <img src="{{ asset('logo.png') }}" alt="Logo" class="w-28 h-28" />
     </a>
 </div>
+
 
 
                 <!-- Navigation Links -->
