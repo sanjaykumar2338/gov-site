@@ -122,10 +122,6 @@
                                             {{ $project->virtual_sort_values['total_belum_dijual_units'] ?? '-' }}
                                             @break
 
-                                        @case('new_first_vp_date')
-                                            {{ $project->virtual_sort_values['new_first_vp_date'] ?? '-' }}
-                                            @break
-
                                         @case('final_ccc_date_virtual')
                                             {{ $project->virtual_sort_values['final_ccc_date_virtual'] ?? '-' }}
                                             @break
