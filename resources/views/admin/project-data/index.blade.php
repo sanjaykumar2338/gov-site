@@ -81,7 +81,6 @@
                     <tr class="bg-base-200 text-left">
                         @php
                             $customColumnLabels = array_merge([
-                               // 'new_vp_date' => 'New First VP Date',
                                 'first_pjb_date' => 'First SPA Date',
                                 'first_vp_date' => 'First Plan VP Date',
                                 'new_plan_vp_date' => 'New Plan Vp Date'
@@ -122,16 +121,16 @@
                                             {{ $project->virtual_sort_values['total_belum_dijual_units'] ?? '-' }}
                                             @break
 
+                                        @case('new_plan_vp_date')
+                                            {{ $project->virtual_sort_values['new_plan_vp_date'] ?? '-' }}
+                                            @break
+
                                         @case('final_ccc_date_virtual')
                                             {{ $project->virtual_sort_values['final_ccc_date_virtual'] ?? '-' }}
                                             @break
 
                                         @case('final_vp_date_virtual')
                                             {{ $project->virtual_sort_values['final_vp_date_virtual'] ?? '-' }}
-                                            @break
-
-                                        @case('new_plan_vp_date')
-                                            {{ $project->virtual_sort_values['new_plan_vp_date'] ?? '-' }}
                                             @break
 
                                         @case('actual_percentage_virtual')
@@ -212,7 +211,6 @@
                 <ul id="sortableColumns" class="space-y-2">
                     @php
                         $customColumnLabels = array_merge([
-                           // 'new_vp_date' => 'New First VP Date',
                             'first_pjb_date' => 'First SPA Date',
                             'first_vp_date' => 'First Plan VP Date',
                             'new_plan_vp_date' => 'New Plan Vp Date'
