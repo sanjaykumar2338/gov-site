@@ -47,7 +47,7 @@ class AuthenticatedSessionController extends Controller
             'updated_at'   => now(),
         ]);
 
-        return redirect()->intended(route('admin.dashboard', absolute: false));
+        return redirect()->intended(route('admin.view.project.data', absolute: false));
     }
 
     /**
