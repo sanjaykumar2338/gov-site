@@ -180,15 +180,22 @@ class ProjectDataController extends Controller
 
     private function tryParseDate($date)
     {
-        foreach (['d/m/Y', 'Y-m-d', 'd-m-Y', 'm/d/Y'] as $format) {
+        $date = trim($date);
+
+        // Ignore empty or dash
+        if (empty($date) || $date === '-') {
+            return null;
+        }
+
+        foreach (['d/m/Y', 'Y-m-d', 'd-m-Y'] as $format) {
             try {
-                return Carbon::createFromFormat($format, trim($date))->format('Y-m-d');
+                return \Carbon\Carbon::createFromFormat($format, $date)->format('Y-m-d');
             } catch (\Exception $e) {
                 continue;
             }
         }
 
-        return null; // If no format matched
+        return null;
     }
 
     private function normalizeDateString($dateStr)
