@@ -5,7 +5,8 @@ use App\Http\Middleware\HasAccessAdmin;
 Route::group([
     'namespace' => 'App\Http\Controllers\Admin',
     'prefix' => config('admin.prefix'),
-    'middleware' => ['auth', 'verified', HasAccessAdmin::class],
+    'middleware' => ['auth'],
+    //'middleware' => ['auth', 'verified', HasAccessAdmin::class],
     'as' => 'admin.',
 ], function () {
     Route::get('/', function () {
