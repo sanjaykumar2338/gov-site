@@ -79,27 +79,28 @@ class ProjectDataController extends Controller
         }
 
         // Filter by VP Date Range
-        if ($request->filled('vp_date_range')) {
-            [$start, $end] = explode('-', $request->vp_date_range);
+        //print_r($request->all()); die;
+        if ($request->filled('final_vp_date')) {
+            [$start, $end] = explode('-', $request->final_vp_date);
             $start = trim($start);
             $end = trim($end);
 
             $query->whereIn('id', function ($q) use ($start, $end) {
                 $q->select('project_id')
-                ->from('unit_summaries')
+                ->from('project_units_summary')
                 ->whereRaw("STR_TO_DATE(REPLACE(vp_date, '/', '-'), '%d-%m-%Y') BETWEEN ? AND ?", [$start, $end]);
             });
         }
 
         // Filter by CCC Date Range
-        if ($request->filled('ccc_date_range')) {
-            [$start, $end] = explode('-', $request->ccc_date_range);
+        if ($request->filled('final_ccc_date')) {
+            [$start, $end] = explode('-', $request->final_ccc_date);
             $start = trim($start);
             $end = trim($end);
 
             $query->whereIn('id', function ($q) use ($start, $end) {
                 $q->select('project_id')
-                ->from('unit_summaries')
+                ->from('project_units_summary')
                 ->whereRaw("STR_TO_DATE(REPLACE(ccc_date, '/', '-'), '%d-%m-%Y') BETWEEN ? AND ?", [$start, $end]);
             });
         }
