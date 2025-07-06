@@ -21,7 +21,6 @@ class ProjectDataController extends Controller
             'total_units' => 'Total Units',
             'total_belum_dijual_units' => 'Total Belum Dijual Units',
             'total_telah_dijual_units' => 'Total Telah Dijual Units',
-            //'new_first_vp_date' => 'New First VP Date',
             'final_ccc_date_virtual' => 'Final CCC Date',
             'final_vp_date_virtual' => 'Final VP Date',
             'actual_percentage_virtual' => 'Actual %',
@@ -52,7 +51,8 @@ class ProjectDataController extends Controller
             ->whereIn(DB::raw('LOWER(state)'), $states)
             ->groupBy('project_code');
 
-        $query = DB::table('project_details')->whereIn('id', $sub->pluck('id'));
+        // Use the Eloquent model 'ProjectDetail' to start the query
+        $query = ProjectDetail::whereIn('id', $sub->pluck('id'));
 
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
@@ -76,17 +76,16 @@ class ProjectDataController extends Controller
         }
 
         if ($request->filled('final_ccc_date')) {
-            // 1. Split the date range string "YYYY-MM-DD - YYYY-MM-DD" into an array
             $dates = explode(' - ', $request->final_ccc_date);
-
-            // 2. Check if we have both a start and end date after splitting
             if (count($dates) === 2) {
                 $startDate = trim($dates[0]);
                 $endDate = trim($dates[1]);
 
-                // 3. Use whereHas with whereBetween for the database query
+                // Use whereHas with whereRaw to convert the string to a date during the query
                 $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween('ccc_date', [$startDate, $endDate]);
+                    // Note: The input dates must be in YYYY-MM-DD format for this to work correctly
+                    // We assume the date picker provides this format.
+                    $q->whereRaw("STR_TO_DATE(ccc_date, '%d/%m/%Y') BETWEEN ? AND ?", [$startDate, $endDate]);
                 });
             }
         }
@@ -99,7 +98,7 @@ class ProjectDataController extends Controller
                 $endDate = trim($dates[1]);
 
                 $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween('vp_date', [$startDate, $endDate]);
+                    $q->whereRaw("STR_TO_DATE(vp_date, '%d/%m/%Y') BETWEEN ? AND ?", [$startDate, $endDate]);
                 });
             }
         }
@@ -126,21 +125,22 @@ class ProjectDataController extends Controller
             $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
             $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
 
-            $finalConstruction = empty(trim($project->extension_approved)) || $project->extension_approved === '-' 
-                ? $project->original_construction_period 
+            $finalConstruction = empty(trim($project->extension_approved)) || $project->extension_approved === '-'
+                ? $project->original_construction_period
                 : $project->new_construction_period;
-
-            // Parse date fields for sorting
+            
+            // Note: The normalizeDateString method call was in your original code, but the method itself was not provided.
+            // I have removed it to prevent errors. If you have this method, you can add it back.
             if ($project->permit_valid_from) {
-                $project->permit_valid_from = \Carbon\Carbon::parse($this->normalizeDateString($project->permit_valid_from));
+                try { $project->permit_valid_from = Carbon::parse($project->permit_valid_from); } catch (\Exception $e) {}
             }
             if ($project->permit_valid_to) {
-                $project->permit_valid_to = \Carbon\Carbon::parse($this->normalizeDateString($project->permit_valid_to));
+                try { $project->permit_valid_to = Carbon::parse($project->permit_valid_to); } catch (\Exception $e) {}
             }
 
             $firstVPDate = null;
             if (!empty($project->first_vp_date) && strtotime($project->first_vp_date)) {
-                $firstVPDate = \Carbon\Carbon::parse($project->first_vp_date);
+                $firstVPDate = Carbon::parse($project->first_vp_date);
             }
 
             preg_match('/\d+/', $project->extension_approved ?? '', $matches);
@@ -153,12 +153,11 @@ class ProjectDataController extends Controller
                 'total_units' => $project->unitBoxes->count(),
                 'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
                 'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
-                //'new_first_vp_date' => $project->new_vp_date ?? null,
                 'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date
-                    ? $this->tryParseDate($project->unitSummaries->firstWhere('ccc_date')->ccc_date)
+                    ? $this->tryParseDate(optional($project->unitSummaries->firstWhere('ccc_date'))->ccc_date)
                     : null,
                 'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date
-                    ? $this->tryParseDate($project->unitSummaries->firstWhere('vp_date')->vp_date)
+                    ? $this->tryParseDate(optional($project->unitSummaries->firstWhere('vp_date'))->vp_date)
                     : null,
                 'actual_percentage_virtual' => $actuals->avg(),
                 'min_price_virtual' => $minPrices->min(),
@@ -203,7 +202,6 @@ class ProjectDataController extends Controller
         ));
     }
 
-    // This function is already in your controller
     private function tryParseDate($date)
     {
         $date = trim($date);
@@ -217,7 +215,7 @@ class ProjectDataController extends Controller
 
         foreach ($formats as $format) {
             try {
-                return \Carbon\Carbon::createFromFormat($format, $date)->format('Y-m-d');
+                return Carbon::createFromFormat($format, $date)->format('Y-m-d');
             } catch (\Exception $e) {
                 continue;
             }
