@@ -21,7 +21,6 @@ class ProjectDataController extends Controller
             'total_units' => 'Total Units',
             'total_belum_dijual_units' => 'Total Belum Dijual Units',
             'total_telah_dijual_units' => 'Total Telah Dijual Units',
-            //'new_first_vp_date' => 'New First VP Date',
             'final_ccc_date_virtual' => 'Final CCC Date',
             'final_vp_date_virtual' => 'Final VP Date',
             'actual_percentage_virtual' => 'Actual %',
@@ -57,6 +56,7 @@ class ProjectDataController extends Controller
         if ($request->filled('state')) {
             $query->whereRaw('LOWER(state) = ?', [strtolower($request->state)]);
         }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -65,19 +65,47 @@ class ProjectDataController extends Controller
                 ->orWhere('project_code', 'like', "%{$search}%");
             });
         }
+
         if ($request->filled('district')) {
             $query->where('district', $request->district);
         }
+
         if ($request->filled('project_status')) {
             $query->where('overall_status', $request->project_status);
         }
+
         if ($request->filled('agreement_type')) {
             $query->where('agreement_type', $request->agreement_type);
         }
 
+        // Filter by VP Date Range
+        if ($request->filled('vp_date_range')) {
+            [$start, $end] = explode('-', $request->vp_date_range);
+            $start = trim($start);
+            $end = trim($end);
+
+            $query->whereIn('id', function ($q) use ($start, $end) {
+                $q->select('project_id')
+                ->from('unit_summaries')
+                ->whereRaw("STR_TO_DATE(REPLACE(vp_date, '/', '-'), '%d-%m-%Y') BETWEEN ? AND ?", [$start, $end]);
+            });
+        }
+
+        // Filter by CCC Date Range
+        if ($request->filled('ccc_date_range')) {
+            [$start, $end] = explode('-', $request->ccc_date_range);
+            $start = trim($start);
+            $end = trim($end);
+
+            $query->whereIn('id', function ($q) use ($start, $end) {
+                $q->select('project_id')
+                ->from('unit_summaries')
+                ->whereRaw("STR_TO_DATE(REPLACE(ccc_date, '/', '-'), '%d-%m-%Y') BETWEEN ? AND ?", [$start, $end]);
+            });
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
-
         $perPage = 10;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
@@ -97,11 +125,10 @@ class ProjectDataController extends Controller
             $minPrices = $project->unitSummaries->pluck('min_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
             $maxPrices = $project->unitSummaries->pluck('max_price')->filter()->map(fn($v) => floatval(preg_replace('/[^0-9.]/', '', $v)));
 
-            $finalConstruction = empty(trim($project->extension_approved)) || $project->extension_approved === '-' 
-                ? $project->original_construction_period 
+            $finalConstruction = empty(trim($project->extension_approved)) || $project->extension_approved === '-'
+                ? $project->original_construction_period
                 : $project->new_construction_period;
 
-            // Parse date fields for sorting
             if ($project->permit_valid_from) {
                 $project->permit_valid_from = \Carbon\Carbon::parse($this->normalizeDateString($project->permit_valid_from));
             }
@@ -124,17 +151,12 @@ class ProjectDataController extends Controller
                 'total_units' => $project->unitBoxes->count(),
                 'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
                 'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
-                //'new_first_vp_date' => $project->new_vp_date ?? null,
-                //'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date,
-                //'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date,
                 'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date
                     ? $this->tryParseDate($project->unitSummaries->firstWhere('ccc_date')->ccc_date)
                     : null,
-
                 'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date
                     ? $this->tryParseDate($project->unitSummaries->firstWhere('vp_date')->vp_date)
                     : null,
-
                 'actual_percentage_virtual' => $actuals->avg(),
                 'min_price_virtual' => $minPrices->min(),
                 'max_price_virtual' => $maxPrices->max(),
@@ -143,7 +165,6 @@ class ProjectDataController extends Controller
             ];
         });
 
-        // Sorting
         if (array_key_exists($sortBy, $virtualColumns)) {
             $projects = $projects->{strtolower($sortOrder) === 'asc' ? 'sortBy' : 'sortByDesc'}(
                 fn($p) => $p->virtual_sort_values[$sortBy] ?? null
