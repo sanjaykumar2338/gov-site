@@ -75,6 +75,35 @@ class ProjectDataController extends Controller
             $query->where('agreement_type', $request->agreement_type);
         }
 
+        if ($request->filled('final_ccc_date')) {
+            // 1. Split the date range string "YYYY-MM-DD - YYYY-MM-DD" into an array
+            $dates = explode(' - ', $request->final_ccc_date);
+
+            // 2. Check if we have both a start and end date after splitting
+            if (count($dates) === 2) {
+                $startDate = trim($dates[0]);
+                $endDate = trim($dates[1]);
+
+                // 3. Use whereHas with whereBetween for the database query
+                $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('ccc_date', [$startDate, $endDate]);
+                });
+            }
+        }
+
+        // Filter by Final VP Date Range
+        if ($request->filled('final_vp_date')) {
+            $dates = explode(' - ', $request->final_vp_date);
+            if (count($dates) === 2) {
+                $startDate = trim($dates[0]);
+                $endDate = trim($dates[1]);
+
+                $query->whereHas('unitSummaries', function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('vp_date', [$startDate, $endDate]);
+                });
+            }
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
@@ -174,6 +203,7 @@ class ProjectDataController extends Controller
         ));
     }
 
+    // This function is already in your controller
     private function tryParseDate($date)
     {
         $date = trim($date);
