@@ -125,8 +125,13 @@ class ProjectDataController extends Controller
                 'total_telah_dijual_units' => $project->unitBoxes->where('status_jualan', 'Telah Dijual')->count(),
                 'total_belum_dijual_units' => $project->unitBoxes->where('status_jualan', '!=', 'Telah Dijual')->count(),
                 //'new_first_vp_date' => $project->new_vp_date ?? null,
-                'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date,
-                'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date,
+                'final_ccc_date_virtual' => optional($project->unitSummaries->firstWhere('ccc_date'))?->ccc_date
+                    ? \Carbon\Carbon::createFromFormat('d/m/Y', $project->unitSummaries->firstWhere('ccc_date')->ccc_date)->format('Y-m-d')
+                    : null,
+
+                'final_vp_date_virtual' => optional($project->unitSummaries->firstWhere('vp_date'))?->vp_date
+                    ? \Carbon\Carbon::createFromFormat('d/m/Y', $project->unitSummaries->firstWhere('vp_date')->vp_date)->format('Y-m-d')
+                    : null,
                 'actual_percentage_virtual' => $actuals->avg(),
                 'min_price_virtual' => $minPrices->min(),
                 'max_price_virtual' => $maxPrices->max(),
